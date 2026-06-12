@@ -1,6 +1,6 @@
 {
   "name": "pi-baton",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "Pi-native workflow baton runner with per-step model switching and isolated step context.",
   "type": "module",
   "license": "MIT",
@@ -22,6 +22,7 @@
   },
   "homepage": "https://github.com/eiei114/pi-baton#readme",
   "files": [
+    "assets/",
     "extensions/",
     "lib/",
     "agents/",
