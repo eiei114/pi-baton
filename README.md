@@ -1,5 +1,9 @@
 # Pi Baton
 
+<p align="center">
+  <img src="./assets/pi-baton-icon-512.png" alt="Pi Baton icon" width="192" height="192" />
+</p>
+
 [![CI](https://github.com/eiei114/pi-baton/actions/workflows/ci.yml/badge.svg)](https://github.com/eiei114/pi-baton/actions/workflows/ci.yml)
 [![npm version](https://img.shields.io/npm/v/pi-baton.svg)](https://www.npmjs.com/package/pi-baton)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
@@ -102,6 +106,7 @@ steps:
 | `lib/` | Workflow parser, run engine, subagent runner, review contract, UI widget |
 | `agents/` | Builtin `worker` and `reviewer` subagent definitions |
 | `workflows/` | Builtin `default-review-loop.yaml` |
+| `assets/` | README / package branding assets |
 | `docs/` | Release docs |
 
 ## Development

@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 This project follows semantic versioning.
 
+## [0.2.3] - 2026-06-13
+
+### Added
+
+- README header icon and packaged `assets/pi-baton-icon-512.png` branding asset.
+
+### Changed
+
+- `assets/` is now included in the published package.
+
 ## [0.2.2] - 2026-06-13
 
 ### Added
