@@ -1,88 +1,108 @@
-# PACKAGE_DISPLAY_NAME
+# Pi Baton
 
-[![CI](https://github.com/OWNER/REPO/actions/workflows/ci.yml/badge.svg)](https://github.com/OWNER/REPO/actions/workflows/ci.yml)
-[![Publish](https://github.com/OWNER/REPO/actions/workflows/publish.yml/badge.svg)](https://github.com/OWNER/REPO/actions/workflows/publish.yml)
-[![npm version](https://img.shields.io/npm/v/PACKAGE_NAME.svg)](https://www.npmjs.com/package/PACKAGE_NAME)
-[![npm downloads](https://img.shields.io/npm/dm/PACKAGE_NAME.svg)](https://www.npmjs.com/package/PACKAGE_NAME)
+[![CI](https://github.com/eiei114/pi-baton/actions/workflows/ci.yml/badge.svg)](https://github.com/eiei114/pi-baton/actions/workflows/ci.yml)
+[![npm version](https://img.shields.io/npm/v/pi-baton.svg)](https://www.npmjs.com/package/pi-baton)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Pi package](https://img.shields.io/badge/pi-package-purple.svg)](https://pi.dev/packages)
-[![Trusted Publishing](https://img.shields.io/badge/npm-Trusted%20Publishing-blue.svg)](docs/release.md)
 
-> One-line pitch for this TypeScript-first Pi package.
+> Run YAML-defined review loops in Pi with per-step model switching and isolated step context.
 
 ## What this is
 
-Briefly explain what this TypeScript-first package adds to Pi and who should use it.
+Pi Baton is a Pi-native workflow baton runner. Define `implement → review → fix` loops in YAML, and let Pi Baton execute them with automatic baton handoff between isolated subagent steps.
 
-## Features
-
-- Feature 1
-- Feature 2
-- Feature 3
+- **Per-step model switching** — fast model for implement, strong model for review
+- **Isolated step context** — no shared conversation pollution between steps
+- **Structured review contract** — `accept`/`reject` with mandatory findings or acceptance notes
+- **Live progress widget** — see which step is running, its agent, and judgment in real time
 
 ## Install
 
-Install the published npm package with Pi:
-
 ```bash
-pi install npm:PACKAGE_NAME
+pi install npm:pi-baton
 ```
 
-Replace `PACKAGE_NAME` with the exact `name` from `package.json`.
-For a scoped npm package, keep the `npm:` prefix:
+Project-local:
 
 ```bash
-pi install npm:@your-scope/your-pi-package
+pi install npm:pi-baton -l
 ```
 
-Pin a specific version when you want reproducible installs:
+GitHub:
 
 ```bash
-pi install npm:PACKAGE_NAME@0.1.0
-```
-
-Install into the current project instead of your user Pi settings:
-
-```bash
-pi install npm:PACKAGE_NAME -l
-```
-
-Or install from GitHub:
-
-```bash
-pi install git:github.com/OWNER/REPO
-```
-
-Try it without permanently installing:
-
-```bash
-pi -e npm:PACKAGE_NAME
+pi install git:github.com/eiei114/pi-baton
 ```
 
 ## Quick start
 
-Try this package locally:
-
-```bash
-pi -e .
+```txt
+/baton:new        create a workflow scaffold
+/baton:start      choose workflow + task brief → idle run
+/baton:run        execute run to terminal state (with live widget)
+/baton:status     show the active run summary
 ```
 
-Then run:
+The builtin `Default Review Loop` workflow (implement → review → fix) works out of the box — no agent setup required.
+
+## Prerequisites
+
+Pi Baton ships builtin `worker` and `reviewer` subagents under `agents/`. They work with your current Pi model.
+
+To override with custom agents, place `.md` files under:
+
+```
+.pi/agents/worker.md
+.pi/agents/reviewer.md
+```
+
+Discovery order: project `.pi/agents/` → user `~/.pi/agent/agents/` → pi-baton builtin.
+
+## Workflow authoring
 
 ```txt
-/your-command
+/baton:new
 ```
+
+Pick a name and a scaffold from `default-review-loop` is written to `.pi/baton/workflows/` and opened in editor. The scaffold includes `<your-fast-model>` / `<your-strong-model>` placeholders for step-level model overrides.
+
+### Workflow YAML reference
+
+```yaml
+name: My Review Loop
+iteration_cap: 5
+steps:
+  implement:
+    agent: worker
+    model: openai/gpt-5.4        # optional: fast model
+    prompt: work prompt
+    next: review
+  review:
+    agent: reviewer
+    model: anthropic/claude-opus-4-5  # optional: strong model
+    prompt: review prompt
+    on_accept: _complete         # or a step name
+    on_reject: fix
+  fix:
+    agent: worker
+    model: openai/gpt-5.4
+    prompt: fix prompt
+    next: review
+```
+
+- `on_accept: _complete` ends the run.
+- `iteration_cap` prevents infinite review loops — the run fails at the cap.
+- Review agents must return `accept`/`reject` with findings or acceptance notes.
 
 ## Package contents
 
 | Path | Purpose |
 |---|---|
-| `extensions/` | Pi TypeScript extension entrypoints (`*.ts` and `index.ts`) |
-| `lib/` | Shared TypeScript helpers |
-| `skills/` | Agent Skills |
-| `prompts/` | Prompt templates |
-| `themes/` | Pi themes |
-| `docs/` | Optional supporting docs (usage, examples, release, ADRs) |
+| `extensions/` | 4 slash-command entrypoint (`/baton:new`, `/baton:start`, `/baton:run`, `/baton:status`) |
+| `lib/` | Workflow parser, run engine, subagent runner, review contract, UI widget |
+| `agents/` | Builtin `worker` and `reviewer` subagent definitions |
+| `workflows/` | Builtin `default-review-loop.yaml` |
+| `docs/` | Release docs |
 
 ## Development
 
@@ -91,73 +111,6 @@ npm install
 npm run ci
 ```
 
-## Development flow
-
-Use this default flow when building a new Pi extension OSS project from this template:
-
-1. Create the Vault project notes under `4_Project/<ProjectName>/`.
-2. Add `CONTEXT.md`, `README.md`, `ROADMAP.md`, `Docs/`, `Issues/`, and `Progress/`.
-3. Write the PRD in `4_Project/<ProjectName>/Docs/`.
-4. Split approved tracer-bullet issues into `4_Project/<ProjectName>/Issues/`.
-5. Implement in the OSS repo.
-6. Run `npm run ci`, `npm test`, and `npm pack --dry-run`.
-7. Release with Trusted Publishing.
-8. Save release notes and follow-up decisions back to the Vault project.
-
-Short version:
-
-```txt
-Vault notes -> PRD -> Issues -> implement -> ci/check -> release -> save learnings
-```
-
-## Release
-
-This package is set up for npm Trusted Publishing, so no `NPM_TOKEN` is required.
-
-```bash
-npm version patch
-git push
-```
-
-See [`docs/release.md`](docs/release.md) for setup details.
-
-## Docs
-
-`docs/` is optional supporting documentation, not a fixed six-file set. README stays the GitHub/npm entrypoint; add `docs/*.md` only when they help users or maintainers.
-
-After creating a repository from this template:
-
-1. Follow [`docs/template-checklist.md`](docs/template-checklist.md) for setup.
-2. Run the **post-generation docs cleanup** in that checklist: delete or merge template bootstrap docs that no longer add project value.
-
-Useful docs to keep when they add value:
-
-- [`docs/examples.md`](docs/examples.md) — examples for extensions, skills, prompts, and themes
-- [`docs/release.md`](docs/release.md) — Trusted Publishing details (README Release summarizes the flow)
-- `docs/usage.md` — create when usage does not fit in README
-
-Optional maintainer guidance (not a public-user navigation target in mature repos):
-
-- [`docs/template-checklist.md`](docs/template-checklist.md)
-
-Template bootstrap docs to delete or merge after setup unless they still teach something project-specific:
-
-- `docs/github-template.md`
-- `docs/repository-settings.md`
-- `docs/typescript.md`
-
-## Security
-
-Pi packages can execute code with your local permissions. Review extensions before installing third-party packages.
-
-For vulnerability reporting, see [`SECURITY.md`](SECURITY.md).
-
-## Links
-
-- npm: https://www.npmjs.com/package/PACKAGE_NAME
-- GitHub: https://github.com/OWNER/REPO
-- Issues: https://github.com/OWNER/REPO/issues
-
 ## License
 
-MIT\n
+MIT

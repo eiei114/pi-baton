@@ -4,6 +4,29 @@ All notable changes to this project will be documented in this file.
 
 This project follows semantic versioning.
 
+## [0.2.2] - 2026-06-13
+
+### Added
+
+- Live Baton run widget above the editor during `/baton:run`, showing workflow, brief, active step, agent, judgment, and step checklist.
+- Footer status line (`baton: implement`, `baton: review`, etc.) while a run is in progress.
+
+## [0.2.1] - 2026-06-13
+
+### Fixed
+
+- Ship builtin `worker` and `reviewer` subagent definitions so `default-review-loop` runs without pre-created `.pi/agents/` files.
+- Validate required workflow agents during `/baton:start` and `/baton:run` with clearer missing-agent errors.
+
+## [0.2.0] - 2026-06-13
+
+### Added
+
+- `/baton:new`, `/baton:start`, `/baton:run`, and `/baton:status` command surface.
+- Builtin `default-review-loop` workflow with `worker` / `reviewer` / `worker` agent mapping.
+- YAML workflow discovery, inline validation, scaffold generation, and run persistence under `.pi/baton/`.
+- Isolated subagent step execution with structured handoff, review contract enforcement, and per-step model routing.
+
 ## [0.1.2] - 2026-06-04
 
 ### Changed

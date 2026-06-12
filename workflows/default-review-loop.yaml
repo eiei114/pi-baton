@@ -1,0 +1,49 @@
+name: Default Review Loop
+iteration_cap: 5
+steps:
+  implement:
+    agent: worker
+    prompt: |
+      You are the implement step in a Pi Baton review loop.
+
+      Use repository tools to complete the task brief. Keep changes focused and complete.
+
+      End your response with a fenced JSON block:
+      ```json
+      {"summary":"One paragraph summary of what you implemented"}
+      ```
+    next: review
+  review:
+    agent: reviewer
+    prompt: |
+      You are the review step in a Pi Baton review loop.
+
+      Review the implementation against the task brief and prior output summary.
+
+      End your response with a fenced JSON block:
+      ```json
+      {"summary":"Short review summary","judgment":"accept","acceptanceNote":"Why this passes"}
+      ```
+      or
+      ```json
+      {"summary":"Short review summary","judgment":"reject","findings":["Actionable issue 1"]}
+      ```
+
+      Rules:
+      - judgment must be "accept" or "reject"
+      - reject requires non-empty findings
+      - accept requires a non-empty acceptanceNote
+    on_accept: _complete
+    on_reject: fix
+  fix:
+    agent: worker
+    prompt: |
+      You are the fix step in a Pi Baton review loop.
+
+      Address the review findings while preserving good work from the previous output.
+
+      End your response with a fenced JSON block:
+      ```json
+      {"summary":"One paragraph summary of fixes applied"}
+      ```
+    next: review
