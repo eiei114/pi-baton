@@ -35,24 +35,30 @@ export default function (pi: ExtensionAPI) {
       try {
         await ensureBatonScaffolding(ctx.cwd);
 
-        const displayName = await ctx.ui.input("Workflow name:", "My Review Loop");
-        if (displayName === undefined) return;
+        while (true) {
+          const displayName = await ctx.ui.input("Workflow name:", "My Review Loop");
+          if (displayName === undefined) return;
 
-        const trimmed = displayName.trim();
-        if (!trimmed) {
-          ctx.ui.notify("Workflow name is required.", "warning");
-          return;
+          const trimmed = displayName.trim();
+          if (!trimmed) {
+            ctx.ui.notify("Workflow name is required.", "warning");
+            continue;
+          }
+
+          try {
+            const { filePath } = await createWorkflowScaffold(ctx.cwd, trimmed);
+            await openWorkflowEditor(ctx, filePath);
+            ctx.ui.notify(`Created workflow scaffold: ${filePath}`, "info");
+            return;
+          } catch (error) {
+            if (error instanceof WorkflowNameCollisionError) {
+              ctx.ui.notify(`${error.message}. Choose a different name.`, "warning");
+              continue;
+            }
+            throw error;
+          }
         }
-
-        const { filePath } = await createWorkflowScaffold(ctx.cwd, trimmed);
-        await openWorkflowEditor(ctx, filePath);
-        ctx.ui.notify(`Created workflow scaffold: ${filePath}`, "info");
       } catch (error) {
-        if (error instanceof WorkflowNameCollisionError) {
-          ctx.ui.notify(`${error.message}. Choose a different name.`, "warning");
-          return;
-        }
-
         const message = error instanceof Error ? error.message : String(error);
         ctx.ui.notify(`Failed to create workflow scaffold: ${message}`, "error");
       }

@@ -1,10 +1,11 @@
 import assert from "node:assert/strict";
-import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { access, mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
 
 const scaffold = await import("../lib/workflow-scaffold.ts");
+const { ensureBatonScaffolding } = await import("../lib/paths.ts");
 
 test("derived scaffold inserts model placeholders for worker and reviewer", () => {
   const builtinYaml = `name: Default Review Loop
@@ -29,6 +30,23 @@ steps:
   assert.match(derived, /model: <your-fast-model>/);
   assert.match(derived, /model: <your-strong-model>/);
   assert.doesNotMatch(derived, /model: <your-fast-model>[\s\S]*model: <your-fast-model>[\s\S]*model: <your-fast-model>/);
+});
+
+test("deriveWorkflowFilename converts display names to kebab-case yaml files", () => {
+  assert.equal(scaffold.deriveWorkflowFilename("My Review Loop"), "my-review-loop.yaml");
+});
+
+test("ensureBatonScaffolding creates .pi/baton paths lazily", async () => {
+  const cwd = await mkdtemp(join(tmpdir(), "pi-baton-paths-"));
+  const workflowsDir = join(cwd, ".pi", "baton", "workflows");
+
+  try {
+    await assert.rejects(() => access(workflowsDir));
+    await ensureBatonScaffolding(cwd);
+    await access(workflowsDir);
+  } finally {
+    await rm(cwd, { recursive: true, force: true });
+  }
 });
 
 test("createWorkflowScaffold writes file and rejects collisions", async () => {

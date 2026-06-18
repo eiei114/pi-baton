@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 This project follows semantic versioning.
 
+## [0.3.0] - 2026-06-18
+
+### Added
+
+- `/baton:new` re-prompts for a workflow name when the derived filename collides with an existing scaffold.
+- Tests for lazy `.pi/baton/workflows/` creation and kebab-case filename derivation.
+
+### Changed
+
+- Workflow discovery keeps user-defined `.pi/baton/workflows/*.yaml` entries ahead of builtin package workflows in selection order.
+
 ## [0.2.3] - 2026-06-13
 
 ### Added
