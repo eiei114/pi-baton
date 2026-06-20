@@ -21,6 +21,24 @@ steps:
     on_reject: implement
 `;
 
+test("discoverWorkflowItems fails validation for invalid user workflow YAML", async () => {
+  const cwd = await mkdtemp(join(tmpdir(), "pi-baton-discovery-invalid-"));
+  const workflowsDir = join(cwd, ".pi", "baton", "workflows");
+
+  try {
+    await mkdir(workflowsDir, { recursive: true });
+    await writeFile(
+      join(workflowsDir, "broken.yaml"),
+      "name: Broken\niteration_cap: 1\nsteps:\n  a:\n    agent: worker\n    prompt: x\n    next: missing\n",
+      "utf8",
+    );
+
+    await assert.rejects(() => discoverWorkflowItems(cwd), /unknown step "missing"/);
+  } finally {
+    await rm(cwd, { recursive: true, force: true });
+  }
+});
+
 test("discoverWorkflowItems lists user-defined workflows before builtin", async () => {
   const cwd = await mkdtemp(join(tmpdir(), "pi-baton-discovery-"));
   const workflowsDir = join(cwd, ".pi", "baton", "workflows");

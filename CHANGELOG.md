@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 This project follows semantic versioning.
 
+## [0.4.0] - 2026-06-21
+
+### Added
+
+- Expanded workflow schema validation tests covering required fields, linear `next` transitions, review `on_accept` / `on_reject` branches, and invalid YAML handling at discovery time.
+
+### Changed
+
+- Workflow selection display names continue to come from YAML `name`; invalid or incomplete workflow documents now fail with explicit validation errors during `/baton:start` and `/baton:run` discovery.
+
 ## [0.3.0] - 2026-06-18
 
 ### Added
