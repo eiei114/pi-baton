@@ -1,12 +1,12 @@
 import assert from "node:assert/strict";
-import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { mkdtemp, readdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
 
 const { runContinuous } = await import("../lib/run-engine.ts");
-const { createIdleRun, loadActiveRun } = await import("../lib/run-store.ts");
-const { getPackageWorkflowsDir } = await import("../lib/paths.ts");
+const { createIdleRun, loadActiveRun, readRunManifest } = await import("../lib/run-store.ts");
+const { getPackageWorkflowsDir, getRunOutputsDir, getRunStepsDir } = await import("../lib/paths.ts");
 
 function reviewOutput(judgment, extra = {}) {
   return `reviewed\n\`\`\`json\n${JSON.stringify({
@@ -57,6 +57,14 @@ test("runContinuous completes accept path with isolated handoff payload", async 
     assert.match(prompts[1], /Previous step summary/);
     assert.match(prompts[1], /Raw output path/);
     assert.doesNotMatch(prompts[1], /implemented[\s\S]{0,40}implemented/);
+
+    const finalManifest = await readRunManifest(cwd, manifest.id);
+    assert.equal(finalManifest.state, "completed");
+
+    const stepFiles = await readdir(getRunStepsDir(cwd, manifest.id));
+    const outputFiles = await readdir(getRunOutputsDir(cwd, manifest.id));
+    assert.ok(stepFiles.length >= 2);
+    assert.ok(outputFiles.length >= 2);
 
     const active = await loadActiveRun(cwd);
     assert.equal(active, null);
@@ -124,6 +132,7 @@ test("runContinuous fails immediately on step execution failure", async () => {
     });
 
     assert.equal(summary.state, "failed");
+    assert.equal(summary.lastStep, "implement");
     assert.match(summary.failureReason ?? "", /boom/);
   } finally {
     await rm(cwd, { recursive: true, force: true });
