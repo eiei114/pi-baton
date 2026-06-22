@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 This project follows semantic versioning.
 
+## [0.5.0] - 2026-06-23
+
+### Added
+
+- `/baton:run` continuous run engine executes the active idle run through isolated subagent steps to a terminal state.
+- Step records persist under `.pi/baton/runs/<run>/steps/` and raw outputs under `outputs/`.
+- Terminal run summaries report the failing step as `last step` when step execution fails.
+
+### Changed
+
+- Expanded `run-engine` tests for step/output persistence, state transitions, and failure `last step` reporting.
+
 ## [0.4.0] - 2026-06-22
 
 ### Added

@@ -242,7 +242,7 @@ export async function runContinuous(options: RunEngineOptions): Promise<RunResul
     manifest = await updateRunState(options.cwd, manifest.id, {
       state: "failed",
       failureReason,
-      lastStep: manifest.lastStep,
+      lastStep: currentStep ?? manifest.lastStep,
       currentStep,
     });
   }
