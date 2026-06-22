@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 This project follows semantic versioning.
 
+## [0.4.0] - 2026-06-20
+
+### Added
+
+- `/baton:start` creates an idle run from workflow selection and a task brief without starting execution.
+- `/baton:status` reports workflow name, task brief, last/current step, run state, iteration count, and run directory.
+- Single active run guard blocks a second `/baton:start` and points users to `/baton:status` or `/baton:run`.
+- Run manifests persist under `.pi/baton/runs/` with an active-run pointer.
+
 ## [0.3.0] - 2026-06-18
 
 ### Added
