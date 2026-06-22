@@ -4,6 +4,7 @@ export function formatStatusSummary(manifest: RunManifest): string {
   return [
     `workflow: ${manifest.workflowName}`,
     `task brief: ${manifest.taskBrief}`,
+    `last step: ${manifest.lastStep ?? "(none)"}`,
     `current step: ${manifest.currentStep ?? "(none)"}`,
     `run state: ${manifest.state}`,
     `iteration count: ${manifest.iteration}`,
