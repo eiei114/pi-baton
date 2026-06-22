@@ -86,7 +86,7 @@ shippable micro task. Seeds are sized **S** (≈30 min), **M** (≈45–60 min),
 **L** (≈75–90 min). The weekly seed planner may pick any `ready` seed; pick top-down
 when there is no other signal.
 
-### S-101 — Delete leftover template resource dirs `[ready]` `S` `cleanup`
+### S-101 — Delete leftover template resource dirs `[ready]` `S` `cleanup` {#s-101}
 
 **What.** Remove `prompts/example.md`, `themes/example-theme.json`, and
 `skills/example-skill/`. These are leftover template scaffolding.
@@ -106,7 +106,7 @@ plausible-looking but broken doc.
 
 ---
 
-### S-102 — Replace stale `docs/examples.md` `[ready]` `M` `docs`
+### S-102 — Replace stale `docs/examples.md` `[ready]` `M` `docs` {#s-102}
 
 **What.** `docs/examples.md` describes `/template-hello`, `template_greet`,
 `extensions/hello.ts`, and `lib/greeting.ts` — **none of which exist in pi-baton**. It is
@@ -126,7 +126,7 @@ describes commands that do not exist. It is the most user-visible defect in the 
 
 ---
 
-### S-103 — Drop template bootstrap docs from the shipped package `[ready]` `M` `docs` `cleanup`
+### S-103 — Drop template bootstrap docs from the shipped package `[ready]` `M` `docs` `cleanup` {#s-103}
 
 **What.** `docs/github-template.md`, `docs/repository-settings.md`,
 `docs/typescript.md`, and `docs/template-checklist.md` are all self-labeled
@@ -148,7 +148,7 @@ deleting or merging these post-setup. Shipping them is noise on every install.
 
 ---
 
-### S-104 — Resolve `npm audit` high-severity advisories `[ready]` `M` `deps` `security`
+### S-104 — Resolve `npm audit` high-severity advisories `[ready]` `M` `deps` `security` {#s-104}
 
 **What.** `npm audit` reports 4 high-severity advisories in transitive deps
 (`undici`, `ws`, `protobufjs`) pulled in via `@earendil-works/pi-coding-agent`. These are
@@ -166,7 +166,7 @@ runtime consumers, but they affect the dev/CI environment and the published prov
 
 ---
 
-### S-105 — Triage and merge the open dependabot queue `[ready]` `S` `deps`
+### S-105 — Triage and merge the open dependabot queue `[ready]` `S` `deps` {#s-105}
 
 **What.** 8 dependabot branches are open (`pi-ai`, `pi-coding-agent`, `typebox`,
 `types/node`, `actions/checkout` major bump to v7). Review each for breaking changes,
@@ -184,7 +184,7 @@ merge or close, and collapse where they conflict.
 
 ---
 
-### S-106 — `/baton:status` for terminal runs `[ready]` `M` `ux`
+### S-106 — `/baton:status` for terminal runs `[ready]` `M` `ux` {#s-106}
 
 **What.** Once a run reaches `completed`/`failed`, `loadActiveRun` returns `null`, so
 `/baton:status` shows `NO_ACTIVE_RUN_MESSAGE` — the user cannot inspect the just-finished
@@ -203,7 +203,7 @@ the result; today that says "no active run," which reads as a failure.
 
 ---
 
-### S-107 — Remove dead `clearActiveRunPointer` (or wire it up) `[ready]` `S` `cleanup`
+### S-107 — Remove dead `clearActiveRunPointer` (or wire it up) `[ready]` `S` `cleanup` {#s-107}
 
 **What.** `clearActiveRunPointer` in `lib/run-store.ts` is exported but **never called**.
 Also note it writes `{ runId: null }` while `readActiveRunPointer` does not treat a null
@@ -222,7 +222,7 @@ thing that bites later.
 
 ---
 
-### S-108 — Add a second builtin workflow (non-review shape) `[backlog]` `L` `feature`
+### S-108 — Add a second builtin workflow (non-review shape) `[backlog]` `L` `feature` {#s-108}
 
 **What.** Add a second workflow under `workflows/` that demonstrates a shape other than
 the review loop — e.g. a pure linear `draft → refine → polish` pipeline, or a
@@ -242,7 +242,7 @@ into proof and lowers the authoring barrier.
 
 ---
 
-### S-109 — Authoring guide for custom workflows `[backlog]` `M` `docs`
+### S-109 — Authoring guide for custom workflows `[backlog]` `M` `docs` {#s-109}
 
 **What.** README has a YAML reference but no walkthrough for authoring a custom loop
 (choosing agents, when to use `on_accept` vs `next`, how `iteration_cap` interacts with
