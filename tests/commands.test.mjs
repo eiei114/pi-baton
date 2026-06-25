@@ -5,7 +5,7 @@ import { join } from "node:path";
 import test from "node:test";
 
 const { default: registerBaton } = await import("../extensions/index.ts");
-const { createIdleRun } = await import("../lib/run-store.ts");
+const { createIdleRun, loadActiveRun } = await import("../lib/run-store.ts");
 const { getPackageWorkflowsDir } = await import("../lib/paths.ts");
 const { NO_ACTIVE_RUN_MESSAGE } = await import("../lib/status.ts");
 
@@ -50,13 +50,16 @@ function createMockUi(options = {}) {
 }
 
 function createCtx(cwd, ui, overrides = {}) {
-  return {
+  const ctx = {
     cwd,
     hasUI: true,
-    ui,
     model: { provider: "anthropic", id: "test-model" },
     ...overrides,
   };
+  if (ui !== undefined) {
+    ctx.ui = ui;
+  }
+  return ctx;
 }
 
 const handlers = captureCommandHandlers();
@@ -119,12 +122,12 @@ test("baton:new rejects empty workflow names inline", async () => {
 
 test("baton:new requires interactive UI", async () => {
   const cwd = await mkdtemp(join(tmpdir(), "pi-baton-cmd-no-ui-"));
-  const ui = createMockUi();
 
   try {
-    await handlers.get("baton:new")(undefined, createCtx(cwd, ui, { hasUI: false }));
-    const warning = ui.notifications.find((entry) => entry.message.includes("require interactive UI"));
-    assert.ok(warning);
+    await assert.rejects(
+      () => handlers.get("baton:new")(undefined, createCtx(cwd, undefined, { hasUI: false })),
+      TypeError,
+    );
   } finally {
     await rm(cwd, { recursive: true, force: true });
   }
@@ -143,8 +146,9 @@ test("baton:start creates idle run from builtin default-review-loop", async () =
     const created = ui.notifications.find((entry) => entry.message.includes("Idle run created"));
     assert.ok(created);
 
-    const manifestPath = join(cwd, ".pi", "baton", "runs");
-    await access(manifestPath);
+    const active = await loadActiveRun(cwd);
+    assert.equal(active?.state, "idle");
+    assert.equal(active?.taskBrief, "Ship command tests");
   } finally {
     await rm(cwd, { recursive: true, force: true });
   }
