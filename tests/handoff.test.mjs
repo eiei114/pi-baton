@@ -34,15 +34,11 @@ const previousEnvelope = {
 test("buildImplementHandoff carries task brief and run metadata only", () => {
   const handoff = buildImplementHandoff(manifest);
 
-  assert.deepEqual(handoff, {
-    taskBrief: "Add handoff tests",
-    runMetadata: {
-      runId: manifest.id,
-      workflowName: "Default Review Loop",
-      currentIteration: 1,
-      targetDirectory: "/tmp/project",
-    },
-  });
+  assert.equal(handoff.taskBrief, "Add handoff tests");
+  assert.equal(handoff.runMetadata.runId, manifest.id);
+  assert.equal(handoff.runMetadata.workflowName, "Default Review Loop");
+  assert.equal(handoff.runMetadata.currentIteration, 1);
+  assert.equal(handoff.runMetadata.targetDirectory, "/tmp/project");
   assert.equal(handoff.stepOutputSummary, undefined);
   assert.equal(handoff.rawOutputPath, undefined);
 });

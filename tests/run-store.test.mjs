@@ -63,6 +63,15 @@ test("loadActiveRun hides completed and failed runs", async () => {
       lastStep: "review",
     });
     assert.equal(await loadActiveRun(cwd), null);
+
+    const failedManifest = await createIdleRun(cwd, { ...runInput, taskBrief: "failed path" });
+    await updateRunState(cwd, failedManifest.id, { state: "running", currentStep: "implement" });
+    await updateRunState(cwd, failedManifest.id, {
+      state: "failed",
+      currentStep: null,
+      lastStep: "implement",
+    });
+    assert.equal(await loadActiveRun(cwd), null);
   } finally {
     await rm(cwd, { recursive: true, force: true });
   }
