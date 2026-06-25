@@ -3,6 +3,9 @@
   "version": "0.7.0",
   "description": "Pi-native workflow baton runner with per-step model switching and isolated step context.",
   "type": "module",
+  "engines": {
+    "node": ">=22.6.0"
+  },
   "license": "MIT",
   "author": "eiei114",
   "keywords": [
