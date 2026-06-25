@@ -39,3 +39,17 @@ test("parseStepEnvelope enforces review contract", () => {
     ReviewContractError,
   );
 });
+
+test("parseStepEnvelope produces structured envelope for non-review steps", () => {
+  const envelope = parseStepEnvelope(
+    'done\n```json\n{"summary":"implemented feature X"}\n```',
+    "/tmp/implement-0.md",
+    { isReviewStep: false },
+  );
+
+  assert.equal(envelope.summary, "implemented feature X");
+  assert.equal(envelope.rawOutputPath, "/tmp/implement-0.md");
+  assert.equal(envelope.judgment, undefined);
+  assert.equal(envelope.findings, undefined);
+  assert.equal(envelope.acceptanceNote, undefined);
+});
