@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 This project follows semantic versioning.
 
+## [0.7.0] - 2026-06-26
+
+### Added
+
+- Command handler tests for `/baton:new`, `/baton:start`, `/baton:run`, and `/baton:status` covering scaffold creation, inline validation, active-run guard, and no-active-run messaging.
+- Handoff payload shape tests for implement, linear, and fix transitions.
+- Run-store tests for active-run visibility across idle, running, and terminal states.
+
+### Changed
+
+- Finalizes the shipped builtin `default-review-loop` workflow (`worker` / `reviewer` / `worker`) with full v1 command-surface test coverage.
+
 ## [0.6.0] - 2026-06-25
 
 ### Added
