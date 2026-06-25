@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 
 This project follows semantic versioning.
 
+## [0.6.0] - 2026-06-25
+
+### Added
+
+- Structured step envelopes for every run step (`summary`, `rawOutputPath`, and review fields when applicable).
+- Step handoff payload carries `taskBrief`, prior `stepOutputSummary`, `rawOutputPath`, and run metadata between isolated steps.
+- Review contract enforcement: `reject` requires non-empty `findings`; `accept` requires `acceptanceNote`.
+- Builtin `default-review-loop` routes `fix` back to `review`; iteration cap stops infinite reject loops.
+- Step-level `model` override with placeholder and session-model fallback via `resolveStepModel`.
+
+### Changed
+
+- Expanded `run-engine` and `review-contract` tests for fix→review routing, model routing, envelope persistence, and contract violations.
+
 ## [0.5.0] - 2026-06-23
 
 ### Added
