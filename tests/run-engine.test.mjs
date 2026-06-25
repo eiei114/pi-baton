@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdtemp, readdir, rm, writeFile } from "node:fs/promises";
+import { mkdtemp, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
@@ -7,7 +7,6 @@ import test from "node:test";
 const { runContinuous } = await import("../lib/run-engine.ts");
 const { createIdleRun, loadActiveRun, readRunManifest } = await import("../lib/run-store.ts");
 const { getPackageWorkflowsDir, getRunOutputsDir, getRunStepsDir } = await import("../lib/paths.ts");
-const { readFile } = await import("node:fs/promises");
 
 function reviewOutput(judgment, extra = {}) {
   return `reviewed\n\`\`\`json\n${JSON.stringify({
