@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 This project follows semantic versioning.
 
+## [0.7.1] - 2026-06-27
+
+### Changed
+
+- README aligned to the current Pi extension template: added `Features`, `Release`, `Security`, and `Links` sections; expanded install flows (`npm`, GitHub, project-local, and `pi -e`); and updated `Package contents` to match the published tarball.
+
 ## [0.7.0] - 2026-06-25
 
 ### Added
