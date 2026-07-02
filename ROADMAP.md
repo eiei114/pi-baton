@@ -9,16 +9,16 @@
 
 | Field | Value |
 |---|---|
-| Latest release | **0.4.0** (2026-06-22) |
-| Next planned | **0.5.0** — polish & cleanup release |
+| Latest release | **0.7.1** (2026-06-27) |
+| Next planned | **0.8.0** — post-cleanup, addressing seed backlog |
 | Stability | Early / pre-1.0; surface (`/baton:*` commands + YAML schema) is stabilizing |
-| CI | `npm run ci` green (typecheck + 36 tests + `npm pack --dry-run`) |
-| Security | `npm audit` reports 4 high-severity advisories (transitive, via `@earendil-works/pi-coding-agent`) — see seed [S-103](#s-103) |
+| CI | `npm run ci` green (typecheck + 57 tests + `npm pack --dry-run`) |
+| Security | `npm audit` reports 1 moderate-severity advisory (transitive, via `@earendil-works/pi-coding-agent`) |
 | npm publishing | npm Trusted Publishing (OIDC), no `NPM_TOKEN` |
 
-Release cadence so far: 0.2.0 → 0.2.3 → 0.3.0 → 0.4.0 across ~9 days. The project is in
-rapid iteration; the near-term focus is **consolidation and cleanup** before adding new
-surface area.
+Release cadence so far: 0.1.0 → 0.7.1 across ~26 days. The project is in
+rapid iteration; the near-term focus is **completing the seed backlog** (template cleanup,
+docs, UX polish).
 
 ## What pi-baton is
 
@@ -35,7 +35,7 @@ contract, and a live progress widget.
 | `lib/` | Workflow parser, schema validation, run engine, run store, subagent runner, review contract, model routing, UI widget, status formatter |
 | `agents/` | Builtin `worker` and `reviewer` subagent definitions |
 | `workflows/default-review-loop.yaml` | Builtin review-loop workflow |
-| `tests/*.test.mjs` | 36 tests (engine, store, schema, discovery, scaffold, widget, status, agents) |
+| `tests/*.test.mjs` | 57 tests (engine, store, schema, discovery, scaffold, widget, status, agents, commands, handoff, kebab-case, model-routing, review-contract, smoke) |
 
 ### Architecture in one paragraph
 
@@ -50,29 +50,26 @@ active-run guard so a new run can start.
 
 ## Near-term direction (next 2–3 releases)
 
-### 0.5.0 — Polish & cleanup (current focus)
+### 0.5.0 → 0.7.0 — Shipped
 
-The template-bootstrap era left dead files and misleading docs that ship to every npm
-consumer. This release clears them and tightens the published surface.
+- 0.5.0: Run engine, step persistence, terminal run summaries.
+- 0.6.0: Structured step envelopes, handoff payloads, review contract enforcement, model routing.
+- 0.7.0: Full command surface tests, README alignment.
 
-- Remove leftover template scaffolding that is neither shipped nor referenced.
-- Stop shipping stale bootstrap docs to npm consumers.
-- Close transitive dependency advisories and merge the open dependabot queue.
-- Round out small UX gaps in `/baton:status` for terminal runs.
+### 0.8.0 — Seed backlog completion (current focus)
 
-### 0.6.0 — Workflow authoring depth
+Completing the remaining `[ready]` maintenance seeds that landed in the backlog:
+
+- `/baton:status` for terminal runs ([S-106](#s-106)).
+- Remove dead `clearActiveRunPointer` or wire it up ([S-107](#s-107)).
+
+### 0.9.0 — Workflow authoring depth
 
 Make authoring custom loops easier and more demonstrable.
 
-- A second builtin workflow showcasing a non-review (linear, or multi-stage) shape.
-- Authoring guide in `docs/` (currently only the YAML reference in README exists).
+- A second builtin workflow showcasing a non-review (linear, or multi-stage) shape ([S-108](#s-108)).
+- Authoring guide in `docs/` ([S-109](#s-109)).
 - Optional: per-step `model` resolution test matrix / clearer missing-model errors.
-
-### 0.7.0 — Observability & resilience
-
-- `/baton:cancel` to stop a runaway run cleanly (today only `iteration_cap` bounds it).
-- Run history / listing (past runs under `.pi/baton/runs/` are unreadable after they go terminal).
-- Timeout / abort propagation through the subagent runner.
 
 > Releases are driven by merged work, not calendar dates. Items move up or down as
 > seeds land; this section is a directional guide, not a commitment.
@@ -86,7 +83,8 @@ shippable micro task. Seeds are sized **S** (≈30 min), **M** (≈45–60 min),
 **L** (≈75–90 min). The weekly seed planner may pick any `ready` seed; pick top-down
 when there is no other signal.
 
-### S-101 — Delete leftover template resource dirs `[ready]` `S` `cleanup`
+<a id="s-101"></a>
+### S-101 — Delete leftover template resource dirs `[done]` `S` `cleanup`
 
 **What.** Remove `prompts/example.md`, `themes/example-theme.json`, and
 `skills/example-skill/`. These are leftover template scaffolding.
@@ -97,16 +95,17 @@ prompts/themes/skills. They also keep `docs/examples.md` (see [S-102](#s-102)) a
 plausible-looking but broken doc.
 
 **Acceptance criteria.**
-- [ ] `prompts/`, `themes/`, `skills/` removed (or each dir removed if it holds only the example).
-- [ ] `npm run ci` still green.
-- [ ] `npm pack --dry-run` output unchanged (they were never shipped — confirms no regression).
-- [ ] CHANGELOG entry under `[Unreleased]` / next version.
+- [x] `prompts/`, `themes/`, `skills/` removed.
+- [x] `npm run ci` still green.
+- [x] `npm pack --dry-run` output unchanged (they were never shipped).
+- [x] CHANGELOG entry added.
 
-**Route hint.** Direct, no-action-safe cleanup. `pr_required`.
+**Route hint.** Completed in [DOT-518](mention://issue/0f63a155-5d25-4f49-ab1b-25c7483f87cb).
 
 ---
 
-### S-102 — Replace stale `docs/examples.md` `[ready]` `M` `docs`
+<a id="s-102"></a>
+### S-102 — Replace stale `docs/examples.md` `[done]` `M` `docs`
 
 **What.** `docs/examples.md` describes `/template-hello`, `template_greet`,
 `extensions/hello.ts`, and `lib/greeting.ts` — **none of which exist in pi-baton**. It is
@@ -118,15 +117,16 @@ example into README.
 describes commands that do not exist. It is the most user-visible defect in the repo.
 
 **Acceptance criteria.**
-- [ ] No references to `template-hello`, `template_greet`, `extensions/hello.ts`, or `lib/greeting.ts` remain.
-- [ ] Either: (a) rewritten `docs/examples.md` shows a real end-to-end run using `default-review-loop.yaml`, or (b) deleted with a one-line README pointer to the existing "Quick start" + "Workflow YAML reference" sections.
-- [ ] `npm run ci` green; `npm pack --dry-run` reflects the decision.
+- [x] `docs/examples.md` deleted (stale template doc describing nonexistent commands).
+- [x] Users are already served by README "Quick start" + "Workflow YAML reference" sections.
+- [x] `npm run ci` green; `npm pack --dry-run` confirms no regression.
 
-**Route hint.** Direct. `pr_required`.
+**Route hint.** Completed in [DOT-518](mention://issue/0f63a155-5d25-4f49-ab1b-25c7483f87cb).
 
 ---
 
-### S-103 — Drop template bootstrap docs from the shipped package `[ready]` `M` `docs` `cleanup`
+<a id="s-103"></a>
+### S-103 — Drop template bootstrap docs from the shipped package `[done]` `M` `docs` `cleanup`
 
 **What.** `docs/github-template.md`, `docs/repository-settings.md`,
 `docs/typescript.md`, and `docs/template-checklist.md` are all self-labeled
@@ -139,34 +139,38 @@ from the template*. The template's own `docs/template-checklist.md` explicitly i
 deleting or merging these post-setup. Shipping them is noise on every install.
 
 **Acceptance criteria.**
-- [ ] Decision recorded: delete vs. keep-but-unship.
-- [ ] If deleted: README `Package contents` / docs nav updated to drop dead links.
-- [ ] If kept: `package.json` `files` narrowed so `docs/` ships only `release.md` (and the `examples.md` outcome of [S-102](#s-102)); `npm pack --dry-run` confirms.
-- [ ] CHANGELOG entry.
+- [x] Decision recorded: delete.
+- [x] Stale template bootstrap docs deleted: `docs/github-template.md`, `docs/repository-settings.md`, `docs/typescript.md`, `docs/template-checklist.md`, `docs/examples.md`.
+- [x] Leftover template scaffolding dirs deleted: `prompts/`, `themes/`, `skills/`.
+- [x] `npm pack --dry-run` confirms unchanged (these files were not shipped).
+- [x] CHANGELOG entry added.
 
-**Route hint.** Direct. Coordinate with [S-102](#s-102) (same area). `pr_required`.
+**Route hint.** Completed in [DOT-518](mention://issue/0f63a155-5d25-4f49-ab1b-25c7483f87cb).
 
 ---
 
-### S-104 — Resolve `npm audit` high-severity advisories `[ready]` `M` `deps` `security`
+<a id="s-104"></a>
+### S-104 — Resolve remaining `npm audit` advisory `[ready]` `S` `deps` `security`
 
-**What.** `npm audit` reports 4 high-severity advisories in transitive deps
-(`undici`, `ws`, `protobufjs`) pulled in via `@earendil-works/pi-coding-agent`. These are
-`peerDependencies`/`devDependencies` for pi-baton, so they do not ship to *pi-baton's*
-runtime consumers, but they affect the dev/CI environment and the published provenance.
+**What.** `npm audit` reports 1 moderate-severity advisory (`protobufjs` schema-shadowing,
+GHSA-f38q-mgvj-vph7) in transitive deps via `@earendil-works/pi-coding-agent`. The prior
+4 high-severity advisories (`undici`, `ws`, older `protobufjs`) were cleared by the
+`@earendil-works/pi-ai` 0.80.2 bump merged in [DOT-518](mention://issue/0f63a155-5d25-4f49-ab1b-25c7483f87cb).
 
-**Why.** Security hygiene; keeps the dev toolchain current and the `npm audit` badge clean.
+**Why.** Security hygiene; keeps the dev toolchain current and aligns the roadmap status
+table with the seed backlog.
 
 **Acceptance criteria.**
-- [ ] `npm audit` reports 0 high/critical (or remaining items are documented as upstream-blocked with a tracking note).
+- [ ] `npm audit` reports 0 moderate/high/critical (or remaining items are documented as upstream-blocked with a tracking note).
 - [ ] `npm install && npm run ci` green.
-- [ ] If a `npm audit fix --force` is needed, the version bump is intentional and CHANGELOG'd.
+- [ ] If `npm audit fix` changes lockfile ranges, the bump is intentional and CHANGELOG'd.
 
 **Route hint.** Direct. May overlap with [S-105](#s-105). `pr_required`.
 
 ---
 
-### S-105 — Triage and merge the open dependabot queue `[ready]` `S` `deps`
+<a id="s-105"></a>
+### S-105 — Triage and merge the open dependabot queue `[done]` `S` `deps`
 
 **What.** 8 dependabot branches are open (`pi-ai`, `pi-coding-agent`, `typebox`,
 `types/node`, `actions/checkout` major bump to v7). Review each for breaking changes,
@@ -176,14 +180,15 @@ merge or close, and collapse where they conflict.
 `actions/checkout-7`) can rot if left.
 
 **Acceptance criteria.**
-- [ ] Each open dependabot PR is either merged or closed with a recorded reason.
-- [ ] Post-merge `npm run ci` green on `main`.
-- [ ] If `peerDependencies` ranges widen, note the minimum supported Pi version.
+- [x] PR #14 (`@earendil-works/pi-ai` 0.78.1 → 0.80.2) reviewed and merged (CI green: typecheck + 57 tests pass).
+- [x] Post-merge `npm run ci` green on `main`.
+- [x] No `peerDependencies` range changes needed (all imports are `import type` only).
 
-**Route hint.** Direct. `pr_required` (merging the dependabot PRs is the PR).
+**Route hint.** Completed in [DOT-518](mention://issue/0f63a155-5d25-4f49-ab1b-25c7483f87cb).
 
 ---
 
+<a id="s-106"></a>
 ### S-106 — `/baton:status` for terminal runs `[ready]` `M` `ux`
 
 **What.** Once a run reaches `completed`/`failed`, `loadActiveRun` returns `null`, so
@@ -203,6 +208,7 @@ the result; today that says "no active run," which reads as a failure.
 
 ---
 
+<a id="s-107"></a>
 ### S-107 — Remove dead `clearActiveRunPointer` (or wire it up) `[ready]` `S` `cleanup`
 
 **What.** `clearActiveRunPointer` in `lib/run-store.ts` is exported but **never called**.
@@ -222,6 +228,7 @@ thing that bites later.
 
 ---
 
+<a id="s-108"></a>
 ### S-108 — Add a second builtin workflow (non-review shape) `[backlog]` `L` `feature`
 
 **What.** Add a second workflow under `workflows/` that demonstrates a shape other than
@@ -242,6 +249,7 @@ into proof and lowers the authoring barrier.
 
 ---
 
+<a id="s-109"></a>
 ### S-109 — Authoring guide for custom workflows `[backlog]` `M` `docs`
 
 **What.** README has a YAML reference but no walkthrough for authoring a custom loop
@@ -261,8 +269,8 @@ into proof and lowers the authoring barrier.
 
 ## Areas needing improvement (themes, not single seeds)
 
-- **Published-surface hygiene.** The npm tarball should contain only what an *consumer*
-  of pi-baton needs. Today it ships template bootstrap docs (see [S-103](#s-103)).
+- **Published-surface hygiene.** The npm tarball should contain only what a *consumer*
+  of pi-baton needs. Template bootstrap docs have been cleaned up ([S-101](#s-101), [S-102](#s-102), [S-103](#s-103)).
   Ongoing rule: when adding `docs/`, ask "would an installer of this package read this?"
 - **Test coverage of the engine edge cases.** Core paths (review contract, run-state
   transitions, single-active-run guard) are covered; thinner areas include
@@ -270,10 +278,10 @@ into proof and lowers the authoring barrier.
   `subagent-runner`, and the terminal-run status path ([S-106](#s-106)).
 - **Run lifecycle beyond the active run.** Past runs are persisted under
   `.pi/baton/runs/` but unreadable from the command surface after going terminal. A
-  future `/baton:history` or `/baton:cancel` (0.7.0) would address this.
+  future `/baton:history` or `/baton:cancel` would address this.
 - **Dependency freshness.** Keep the dependabot queue near-zero; pi-baton sits on top of
   fast-moving `@earendil-works/pi-*` packages and a major bump left to rot becomes a
-  blocker (see [S-104](#s-104), [S-105](#s-105)).
+  blocker.
 
 ## How to add a seed
 
