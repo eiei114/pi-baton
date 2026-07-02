@@ -134,7 +134,7 @@ steps:
 | `agents/` | Builtin `worker` and `reviewer` subagent definitions |
 | `workflows/` | Builtin `default-review-loop.yaml` |
 | `assets/` | README / package branding assets |
-| `docs/` | Release and maintainer docs |
+| `docs/` | Release and maintainer documentation |
 
 ## Development
 

@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 This project follows semantic versioning.
 
+## [Unreleased]
+
+### Changed
+
+- Merged Dependabot PR #14: bump `@earendil-works/pi-ai` devDependency from 0.78.1 to 0.80.2 (type-check clean, 57/57 tests passing).
+- Removed leftover template scaffolding (`prompts/`, `themes/`, `skills/`).
+- Deleted stale template bootstrap docs (`docs/examples.md`, `docs/github-template.md`, `docs/repository-settings.md`, `docs/typescript.md`, `docs/template-checklist.md`) that shipped to npm consumers describing non-existent commands.
+- Updated ROADMAP.md to reflect current version (0.7.1), test count (57), and seed completion status for S-101, S-102, S-103, S-105.
+
 ## [0.7.1] - 2026-06-27
 
 ### Changed
