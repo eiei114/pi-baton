@@ -83,6 +83,7 @@ shippable micro task. Seeds are sized **S** (≈30 min), **M** (≈45–60 min),
 **L** (≈75–90 min). The weekly seed planner may pick any `ready` seed; pick top-down
 when there is no other signal.
 
+<a id="s-101"></a>
 ### S-101 — Delete leftover template resource dirs `[done]` `S` `cleanup`
 
 **What.** Remove `prompts/example.md`, `themes/example-theme.json`, and
@@ -103,6 +104,7 @@ plausible-looking but broken doc.
 
 ---
 
+<a id="s-102"></a>
 ### S-102 — Replace stale `docs/examples.md` `[done]` `M` `docs`
 
 **What.** `docs/examples.md` describes `/template-hello`, `template_greet`,
@@ -123,6 +125,7 @@ describes commands that do not exist. It is the most user-visible defect in the 
 
 ---
 
+<a id="s-103"></a>
 ### S-103 — Drop template bootstrap docs from the shipped package `[done]` `M` `docs` `cleanup`
 
 **What.** `docs/github-template.md`, `docs/repository-settings.md`,
@@ -146,24 +149,27 @@ deleting or merging these post-setup. Shipping them is noise on every install.
 
 ---
 
-### S-104 — Resolve `npm audit` high-severity advisories `[ready]` `M` `deps` `security`
+<a id="s-104"></a>
+### S-104 — Resolve remaining `npm audit` advisory `[ready]` `S` `deps` `security`
 
-**What.** `npm audit` reports 4 high-severity advisories in transitive deps
-(`undici`, `ws`, `protobufjs`) pulled in via `@earendil-works/pi-coding-agent`. These are
-`peerDependencies`/`devDependencies` for pi-baton, so they do not ship to *pi-baton's*
-runtime consumers, but they affect the dev/CI environment and the published provenance.
+**What.** `npm audit` reports 1 moderate-severity advisory (`protobufjs` schema-shadowing,
+GHSA-f38q-mgvj-vph7) in transitive deps via `@earendil-works/pi-coding-agent`. The prior
+4 high-severity advisories (`undici`, `ws`, older `protobufjs`) were cleared by the
+`@earendil-works/pi-ai` 0.80.2 bump merged in [DOT-518](mention://issue/0f63a155-5d25-4f49-ab1b-25c7483f87cb).
 
-**Why.** Security hygiene; keeps the dev toolchain current and the `npm audit` badge clean.
+**Why.** Security hygiene; keeps the dev toolchain current and aligns the roadmap status
+table with the seed backlog.
 
 **Acceptance criteria.**
-- [ ] `npm audit` reports 0 high/critical (or remaining items are documented as upstream-blocked with a tracking note).
+- [ ] `npm audit` reports 0 moderate/high/critical (or remaining items are documented as upstream-blocked with a tracking note).
 - [ ] `npm install && npm run ci` green.
-- [ ] If a `npm audit fix --force` is needed, the version bump is intentional and CHANGELOG'd.
+- [ ] If `npm audit fix` changes lockfile ranges, the bump is intentional and CHANGELOG'd.
 
 **Route hint.** Direct. May overlap with [S-105](#s-105). `pr_required`.
 
 ---
 
+<a id="s-105"></a>
 ### S-105 — Triage and merge the open dependabot queue `[done]` `S` `deps`
 
 **What.** 8 dependabot branches are open (`pi-ai`, `pi-coding-agent`, `typebox`,
@@ -182,6 +188,7 @@ merge or close, and collapse where they conflict.
 
 ---
 
+<a id="s-106"></a>
 ### S-106 — `/baton:status` for terminal runs `[ready]` `M` `ux`
 
 **What.** Once a run reaches `completed`/`failed`, `loadActiveRun` returns `null`, so
@@ -201,6 +208,7 @@ the result; today that says "no active run," which reads as a failure.
 
 ---
 
+<a id="s-107"></a>
 ### S-107 — Remove dead `clearActiveRunPointer` (or wire it up) `[ready]` `S` `cleanup`
 
 **What.** `clearActiveRunPointer` in `lib/run-store.ts` is exported but **never called**.
@@ -220,6 +228,7 @@ thing that bites later.
 
 ---
 
+<a id="s-108"></a>
 ### S-108 — Add a second builtin workflow (non-review shape) `[backlog]` `L` `feature`
 
 **What.** Add a second workflow under `workflows/` that demonstrates a shape other than
@@ -240,6 +249,7 @@ into proof and lowers the authoring barrier.
 
 ---
 
+<a id="s-109"></a>
 ### S-109 — Authoring guide for custom workflows `[backlog]` `M` `docs`
 
 **What.** README has a YAML reference but no walkthrough for authoring a custom loop
