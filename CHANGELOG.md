@@ -6,6 +6,8 @@ This project follows semantic versioning.
 
 ## [Unreleased]
 
+- Add Buy Me a Coffee sponsor button to README and native GitHub funding link via `.github/FUNDING.yml`.
+
 ### Changed
 
 - Merged Dependabot PR #14: bump `@earendil-works/pi-ai` devDependency from 0.78.1 to 0.80.2 (type-check clean, 57/57 tests passing).
@@ -137,3 +139,4 @@ This project follows semantic versioning.
 - Initial Pi package template.
 - Example extension, Agent Skill, prompt, and theme.
 - CI and npm Trusted Publishing workflow.
+
