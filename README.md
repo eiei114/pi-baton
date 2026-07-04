@@ -8,6 +8,7 @@
 [![npm version](https://img.shields.io/npm/v/pi-baton.svg)](https://www.npmjs.com/package/pi-baton)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Pi package](https://img.shields.io/badge/pi-package-purple.svg)](https://pi.dev/packages)
+<a href="https://buymeacoffee.com/ekawano114m"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" width="217" height="60"></a>
 
 > Run YAML-defined review loops in Pi with per-step model switching and isolated step context.
 
