@@ -41,13 +41,32 @@ export async function readRunManifest(cwd: string, runId: string): Promise<RunMa
   return readJson<RunManifest>(getRunManifestPath(cwd, runId));
 }
 
+function isTerminalRunState(state: RunState): boolean {
+  return state === "completed" || state === "failed";
+}
+
 export async function loadActiveRun(cwd: string): Promise<RunManifest | null> {
   const pointer = await readActiveRunPointer(cwd);
-  if (!pointer) return null;
+  if (!pointer?.runId) return null;
 
   try {
     const manifest = await readRunManifest(cwd, pointer.runId);
-    if (manifest.state === "completed" || manifest.state === "failed") {
+    if (isTerminalRunState(manifest.state)) {
+      return null;
+    }
+    return manifest;
+  } catch {
+    return null;
+  }
+}
+
+export async function loadMostRecentTerminalRun(cwd: string): Promise<RunManifest | null> {
+  const pointer = await readActiveRunPointer(cwd);
+  if (!pointer?.runId) return null;
+
+  try {
+    const manifest = await readRunManifest(cwd, pointer.runId);
+    if (!isTerminalRunState(manifest.state)) {
       return null;
     }
     return manifest;
