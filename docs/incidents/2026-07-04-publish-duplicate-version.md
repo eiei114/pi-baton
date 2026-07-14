@@ -10,7 +10,7 @@ The `Publish to npm` run
 [28704529442](https://github.com/eiei114/pi-baton/actions/runs/28704529442)
 (`v0.7.2`, dispatched 2026-07-04) failed at the final `npm publish` step with:
 
-```
+```text
 npm error code E403
 npm error 403 403 Forbidden - PUT https://registry.npmjs.org/pi-baton
 npm error 403 You cannot publish over the previously published versions: 0.7.2.
@@ -51,9 +51,9 @@ Step-by-step status (from the run): `Set up job`, `Checkout`, `Setup Node.js`,
 package`, `Skip already published version` all **passed**; `Publish to npm`
 **failed**.
 
-Failure output (verbatim, from the failed step log):
+Failure output excerpt (from the failed step log):
 
-```
+```text
 npm notice 📦  pi-baton@0.7.2
 ...
 npm notice Publishing to https://registry.npmjs.org/ with tag latest and public access
@@ -114,17 +114,19 @@ the real-time conflict.
 
 ### npm public state (read-only)
 
-```
+```console
 $ npm view pi-baton version dist-tags.latest
 0.7.2
 { latest: '0.7.2' }
 
 $ npm view pi-baton time --json
 {
-  "0.7.2": "2026-07-04T11:18:56.171Z",   # published by the winning push run
+  "0.7.2": "2026-07-04T11:18:56.171Z",
   ...
 }
 ```
+
+The `0.7.2` timestamp was published by the winning push run (28704526901).
 
 `pi-baton@0.7.2` is present, is `dist-tags.latest`, and was published at
 11:18:56Z — i.e. by the parallel push run (28704526901), not by the failed run.
