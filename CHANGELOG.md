@@ -10,6 +10,8 @@ This project follows semantic versioning.
 
 ### Added
 
+- `/baton:status` now shows the most recent finished run summary (state, last step, iteration, run directory) after a run reaches `completed` or `failed`, with clear finished-run framing instead of the no-active-run message.
+
 - Buy Me a Coffee sponsor button in README and native GitHub funding link via `.github/FUNDING.yml`.
 
 ### Changed

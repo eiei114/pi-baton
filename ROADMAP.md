@@ -12,7 +12,7 @@
 | Latest release | **0.7.2** (2026-07-04) |
 | Next planned | **0.8.0** — post-cleanup, addressing seed backlog |
 | Stability | Early / pre-1.0; surface (`/baton:*` commands + YAML schema) is stabilizing |
-| CI | `npm run ci` green (typecheck + 57 tests + `npm pack --dry-run`) |
+| CI | `npm run ci` green (typecheck + 60 tests + `npm pack --dry-run`) |
 | Security | `npm audit` reports 1 moderate-severity advisory (transitive, via `@earendil-works/pi-coding-agent`) |
 | npm publishing | npm Trusted Publishing (OIDC), no `NPM_TOKEN` |
 

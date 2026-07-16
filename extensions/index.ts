@@ -5,7 +5,12 @@ import { MissingAgentsError, validateWorkflowAgents } from "../lib/agents.ts";
 import { ensureBatonScaffolding } from "../lib/paths.ts";
 import { formatRunResultSummary, runContinuous } from "../lib/run-engine.ts";
 import { createRunUiController } from "../lib/run-ui.ts";
-import { ActiveRunGuardError, createIdleRun, loadActiveRun } from "../lib/run-store.ts";
+import {
+  ActiveRunGuardError,
+  createIdleRun,
+  loadActiveRun,
+  loadMostRecentTerminalRun,
+} from "../lib/run-store.ts";
 import { NO_ACTIVE_RUN_MESSAGE, formatStatusSummary } from "../lib/status.ts";
 import { createSubagentRunner } from "../lib/subagent-runner.ts";
 import { WorkflowNameCollisionError, createWorkflowScaffold } from "../lib/workflow-scaffold.ts";
@@ -185,7 +190,7 @@ export default function (pi: ExtensionAPI) {
   pi.registerCommand("baton:status", {
     description: "Show the active Baton run summary",
     handler: async (_args, ctx) => {
-      const manifest = await loadActiveRun(ctx.cwd);
+      const manifest = (await loadActiveRun(ctx.cwd)) ?? (await loadMostRecentTerminalRun(ctx.cwd));
       if (!manifest) {
         ctx.ui.notify(NO_ACTIVE_RUN_MESSAGE, "info");
         return;
