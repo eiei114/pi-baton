@@ -9,14 +9,14 @@
 
 | Field | Value |
 |---|---|
-| Latest release | **0.7.1** (2026-06-27) |
+| Latest release | **0.7.2** (2026-07-04) |
 | Next planned | **0.8.0** — post-cleanup, addressing seed backlog |
 | Stability | Early / pre-1.0; surface (`/baton:*` commands + YAML schema) is stabilizing |
 | CI | `npm run ci` green (typecheck + 57 tests + `npm pack --dry-run`) |
 | Security | `npm audit` reports 1 moderate-severity advisory (transitive, via `@earendil-works/pi-coding-agent`) |
 | npm publishing | npm Trusted Publishing (OIDC), no `NPM_TOKEN` |
 
-Release cadence so far: 0.1.0 → 0.7.1 across ~26 days. The project is in
+Release cadence so far: 0.1.0 → 0.7.2 across ~30 days. The project is in
 rapid iteration; the near-term focus is **completing the seed backlog** (template cleanup,
 docs, UX polish).
 

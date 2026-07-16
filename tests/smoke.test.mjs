@@ -3,6 +3,7 @@ import { readFile } from "node:fs/promises";
 import test from "node:test";
 
 const packageJson = JSON.parse(await readFile(new URL("../package.json", import.meta.url), "utf8"));
+const readme = await readFile(new URL("../README.md", import.meta.url), "utf8");
 const builtinWorkflow = await readFile(
   new URL("../workflows/default-review-loop.yaml", import.meta.url),
   "utf8",
@@ -26,4 +27,10 @@ test("package is discoverable as a Pi package", () => {
 
 test("package uses public publish config", () => {
   assert.equal(packageJson.publishConfig.access, "public");
+});
+
+test("README pinned install example matches package version", () => {
+  const match = readme.match(/pi install npm:pi-baton@(\d+\.\d+\.\d+)/);
+  assert.ok(match, "README should include a pinned npm install example");
+  assert.equal(match[1], packageJson.version);
 });
