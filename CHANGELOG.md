@@ -6,18 +6,20 @@ This project follows semantic versioning.
 
 ## [Unreleased]
 
+## [0.7.2] - 2026-07-04
+
 ### Added
 
 - `/baton:status` now shows the most recent finished run summary (state, last step, iteration, run directory) after a run reaches `completed` or `failed`, with clear finished-run framing instead of the no-active-run message.
 
-- Add Buy Me a Coffee sponsor button to README and native GitHub funding link via `.github/FUNDING.yml`.
+- Buy Me a Coffee sponsor button in README and native GitHub funding link via `.github/FUNDING.yml`.
 
 ### Changed
 
 - Merged Dependabot PR #14: bump `@earendil-works/pi-ai` devDependency from 0.78.1 to 0.80.2 (type-check clean, 57/57 tests passing).
 - Removed leftover template scaffolding (`prompts/`, `themes/`, `skills/`).
 - Deleted stale template bootstrap docs (`docs/examples.md`, `docs/github-template.md`, `docs/repository-settings.md`, `docs/typescript.md`, `docs/template-checklist.md`) that shipped to npm consumers describing non-existent commands.
-- Updated ROADMAP.md to reflect current version (0.7.1), test count (57), and seed completion status for S-101, S-102, S-103, S-105.
+- Updated ROADMAP.md to reflect current version (0.7.2), test count (57), and seed completion status for S-101, S-102, S-103, S-105.
 
 ## [0.7.1] - 2026-06-27
 
