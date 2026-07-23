@@ -9,6 +9,7 @@ This project follows semantic versioning.
 ### Changed
 
 - Bump package version to `0.7.3` for the next patch release.
+- Removed unused `clearActiveRunPointer` export from `lib/run-store.ts` (dead code with no callers; `loadActiveRun` / `loadMostRecentTerminalRun` already treat a missing `runId` as no active pointer).
 
 ## [0.7.2] - 2026-07-04
 

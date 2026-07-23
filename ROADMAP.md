@@ -9,7 +9,7 @@
 
 | Field | Value |
 |---|---|
-| Latest release | **0.7.2** (2026-07-04) |
+| Latest release | **0.7.3** (unreleased) |
 | Next planned | **0.8.0** — post-cleanup, addressing seed backlog |
 | Stability | Early / pre-1.0; surface (`/baton:*` commands + YAML schema) is stabilizing |
 | CI | `npm run ci` green (typecheck + 60 tests + `npm pack --dry-run`) |
@@ -35,7 +35,7 @@ contract, and a live progress widget.
 | `lib/` | Workflow parser, schema validation, run engine, run store, subagent runner, review contract, model routing, UI widget, status formatter |
 | `agents/` | Builtin `worker` and `reviewer` subagent definitions |
 | `workflows/default-review-loop.yaml` | Builtin review-loop workflow |
-| `tests/*.test.mjs` | 57 tests (engine, store, schema, discovery, scaffold, widget, status, agents, commands, handoff, kebab-case, model-routing, review-contract, smoke) |
+| `tests/*.test.mjs` | 60 tests (engine, store, schema, discovery, scaffold, widget, status, agents, commands, handoff, kebab-case, model-routing, review-contract, smoke) |
 
 ### Architecture in one paragraph
 
@@ -60,8 +60,7 @@ active-run guard so a new run can start.
 
 Completing the remaining `[ready]` maintenance seeds that landed in the backlog:
 
-- `/baton:status` for terminal runs ([S-106](#s-106)).
-- Remove dead `clearActiveRunPointer` or wire it up ([S-107](#s-107)).
+- `/baton:status` for terminal runs ([S-106](#s-106)) — shipped in 0.7.2.
 
 ### 0.9.0 — Workflow authoring depth
 
@@ -189,7 +188,7 @@ merge or close, and collapse where they conflict.
 ---
 
 <a id="s-106"></a>
-### S-106 — `/baton:status` for terminal runs `[ready]` `M` `ux`
+### S-106 — `/baton:status` for terminal runs `[done]` `M` `ux`
 
 **What.** Once a run reaches `completed`/`failed`, `loadActiveRun` returns `null`, so
 `/baton:status` shows `NO_ACTIVE_RUN_MESSAGE` — the user cannot inspect the just-finished
@@ -199,17 +198,17 @@ run's outcome, last step, or run directory from the command surface.
 the result; today that says "no active run," which reads as a failure.
 
 **Acceptance criteria.**
-- [ ] `/baton:status` after a terminal run shows the most recent run's summary (state, last step, iteration, run directory) with a clear "this run is finished" framing, rather than the no-active-run message.
-- [ ] Behavior when no run has ever existed is unchanged (still the no-active-run message).
-- [ ] New/updated test in `tests/status.test.mjs` covering the terminal-run path.
-- [ ] CHANGELOG entry.
+- [x] `/baton:status` after a terminal run shows the most recent run's summary (state, last step, iteration, run directory) with a clear "this run is finished" framing, rather than the no-active-run message.
+- [x] Behavior when no run has ever existed is unchanged (still the no-active-run message).
+- [x] New/updated test in `tests/status.test.mjs` covering the terminal-run path.
+- [x] CHANGELOG entry.
 
-**Route hint.** Direct implementation seed. `pr_required`.
+**Route hint.** Shipped in 0.7.2.
 
 ---
 
 <a id="s-107"></a>
-### S-107 — Remove dead `clearActiveRunPointer` (or wire it up) `[ready]` `S` `cleanup`
+### S-107 — Remove dead `clearActiveRunPointer` (or wire it up) `[done]` `S` `cleanup`
 
 **What.** `clearActiveRunPointer` in `lib/run-store.ts` is exported but **never called**.
 Also note it writes `{ runId: null }` while `readActiveRunPointer` does not treat a null
@@ -221,10 +220,10 @@ read.
 thing that bites later.
 
 **Acceptance criteria.**
-- [ ] Either removed (with grep confirming no callers), OR called from a documented path (e.g. a future `/baton:cancel`) and `readActiveRunPointer` treats `{ runId: null }` as no-pointer.
-- [ ] `npm run ci` green.
+- [x] Removed (grep confirms no callers).
+- [x] `npm run ci` green.
 
-**Route hint.** Direct. Pairs naturally with the future `/baton:cancel` work (0.7.0). `pr_required`.
+**Route hint.** Completed in DOT-1090.
 
 ---
 
