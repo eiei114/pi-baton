@@ -84,10 +84,6 @@ export async function setActiveRunPointer(cwd: string, runId: string): Promise<v
   await writeJson(getActiveRunPointerPath(cwd), { runId } satisfies ActiveRunPointer);
 }
 
-export async function clearActiveRunPointer(cwd: string): Promise<void> {
-  await writeJson(getActiveRunPointerPath(cwd), { runId: null });
-}
-
 export interface CreateRunInput {
   workflowId: string;
   workflowName: string;
