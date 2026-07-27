@@ -13,7 +13,7 @@
 | Next planned | **0.8.0** — post-cleanup, addressing seed backlog |
 | Stability | Early / pre-1.0; surface (`/baton:*` commands + YAML schema) is stabilizing |
 | CI | `npm run ci` green (typecheck + 60 tests + `npm pack --dry-run`) |
-| Security | `npm audit` reports 1 moderate-severity advisory (transitive, via `@earendil-works/pi-coding-agent`) |
+| Security | `npm audit` reports 1 high-severity advisory (transitive `brace-expansion`, upstream-blocked by `@earendil-works/pi-coding-agent` shrinkwrap) |
 | npm publishing | npm Trusted Publishing (OIDC), no `NPM_TOKEN` |
 
 Release cadence so far: 0.1.0 → 0.7.2 across ~30 days. The project is in
@@ -149,22 +149,24 @@ deleting or merging these post-setup. Shipping them is noise on every install.
 ---
 
 <a id="s-104"></a>
-### S-104 — Resolve remaining `npm audit` advisory `[ready]` `S` `deps` `security`
+### S-104 — Resolve remaining `npm audit` advisory `[done]` `S` `deps` `security`
 
-**What.** `npm audit` reports 1 moderate-severity advisory (`protobufjs` schema-shadowing,
-GHSA-f38q-mgvj-vph7) in transitive deps via `@earendil-works/pi-coding-agent`. The prior
-4 high-severity advisories (`undici`, `ws`, older `protobufjs`) were cleared by the
-`@earendil-works/pi-ai` 0.80.2 bump merged in [DOT-518](mention://issue/0f63a155-5d25-4f49-ab1b-25c7483f87cb).
+**What.** `npm audit` reported transitive advisories via `@earendil-works/pi-coding-agent`.
+The dev toolchain bump clears the `protobufjs` finding. The remaining `brace-expansion`
+GHSA-mh99-v99m-4gvg advisory is upstream-blocked: `@earendil-works/pi-coding-agent`
+0.82.1 publishes an `npm-shrinkwrap.json` that pins `brace-expansion` 5.0.7 under its
+private dependency tree, and npm root `overrides` / `npm audit fix` cannot override that
+published shrinkwrap until the upstream package republishes with `brace-expansion` 5.0.8+.
 
 **Why.** Security hygiene; keeps the dev toolchain current and aligns the roadmap status
 table with the seed backlog.
 
 **Acceptance criteria.**
-- [ ] `npm audit` reports 0 moderate/high/critical (or remaining items are documented as upstream-blocked with a tracking note).
-- [ ] `npm install && npm run ci` green.
-- [ ] If `npm audit fix` changes lockfile ranges, the bump is intentional and CHANGELOG'd.
+- [x] `npm audit` reports 0 moderate/high/critical for advisories fixable in this repo; remaining `brace-expansion` item is documented as upstream-blocked.
+- [x] `npm install && npm run ci` green.
+- [x] Lockfile/package bump is intentional and CHANGELOG'd.
 
-**Route hint.** Direct. May overlap with [S-105](#s-105). `pr_required`.
+**Route hint.** Completed in [DOT-1227](mention://issue/9a7eafb5-8f80-4ef8-9d08-cea17628b1a1).
 
 ---
 
