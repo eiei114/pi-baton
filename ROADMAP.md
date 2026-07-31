@@ -12,7 +12,7 @@
 | Latest release | **0.7.2** (2026-07-04) |
 | Next planned | **0.8.0** — post-cleanup, addressing seed backlog |
 | Stability | Early / pre-1.0; surface (`/baton:*` commands + YAML schema) is stabilizing |
-| CI | `npm run ci` green (typecheck + 60 tests + `npm pack --dry-run`) |
+| CI | `npm run ci` green (typecheck + 61 tests + `npm pack --dry-run`) |
 | Security | `npm audit` reports 1 moderate-severity advisory (transitive, via `@earendil-works/pi-coding-agent`) |
 | npm publishing | npm Trusted Publishing (OIDC), no `NPM_TOKEN` |
 
@@ -35,7 +35,7 @@ contract, and a live progress widget.
 | `lib/` | Workflow parser, schema validation, run engine, run store, subagent runner, review contract, model routing, UI widget, status formatter |
 | `agents/` | Builtin `worker` and `reviewer` subagent definitions |
 | `workflows/default-review-loop.yaml` | Builtin review-loop workflow |
-| `tests/*.test.mjs` | 57 tests (engine, store, schema, discovery, scaffold, widget, status, agents, commands, handoff, kebab-case, model-routing, review-contract, smoke) |
+| `tests/*.test.mjs` | 61 tests (engine, store, schema, discovery, scaffold, widget, status, agents, commands, handoff, kebab-case, model-routing, review-contract, extension-registration, smoke) |
 
 ### Architecture in one paragraph
 
