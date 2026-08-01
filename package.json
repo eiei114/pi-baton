@@ -1,6 +1,6 @@
 {
   "name": "pi-baton",
-  "version": "0.7.2",
+  "version": "0.7.3",
   "description": "Pi-native workflow baton runner with per-step model switching and isolated step context.",
   "type": "module",
   "engines": {
@@ -58,8 +58,8 @@
     "typebox": "*"
   },
   "devDependencies": {
-    "@earendil-works/pi-ai": "^0.80.6",
-    "@earendil-works/pi-coding-agent": "^0.80.6",
+    "@earendil-works/pi-ai": "^0.82.1",
+    "@earendil-works/pi-coding-agent": "^0.82.1",
     "typebox": "latest",
     "@types/node": "^26.0.1",
     "typescript": "^6.0.3"

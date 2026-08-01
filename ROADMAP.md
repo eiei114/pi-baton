@@ -9,11 +9,11 @@
 
 | Field | Value |
 |---|---|
-| Latest release | **0.7.2** (2026-07-04) |
+| Latest release | **0.7.3** (unreleased) |
 | Next planned | **0.8.0** — post-cleanup, addressing seed backlog |
 | Stability | Early / pre-1.0; surface (`/baton:*` commands + YAML schema) is stabilizing |
 | CI | `npm run ci` green (typecheck + 61 tests + `npm pack --dry-run`) |
-| Security | `npm audit` reports 1 moderate-severity advisory (transitive, via `@earendil-works/pi-coding-agent`) |
+| Security | `npm audit` reports 1 high-severity advisory (transitive `brace-expansion`, upstream-blocked by `@earendil-works/pi-coding-agent` shrinkwrap) |
 | npm publishing | npm Trusted Publishing (OIDC), no `NPM_TOKEN` |
 
 Release cadence so far: 0.1.0 → 0.7.2 across ~30 days. The project is in
@@ -60,8 +60,7 @@ active-run guard so a new run can start.
 
 Completing the remaining `[ready]` maintenance seeds that landed in the backlog:
 
-- `/baton:status` for terminal runs ([S-106](#s-106)).
-- Remove dead `clearActiveRunPointer` or wire it up ([S-107](#s-107)).
+- `/baton:status` for terminal runs ([S-106](#s-106)) — shipped in 0.7.2.
 
 ### 0.9.0 — Workflow authoring depth
 
@@ -150,22 +149,24 @@ deleting or merging these post-setup. Shipping them is noise on every install.
 ---
 
 <a id="s-104"></a>
-### S-104 — Resolve remaining `npm audit` advisory `[ready]` `S` `deps` `security`
+### S-104 — Resolve remaining `npm audit` advisory `[done]` `S` `deps` `security`
 
-**What.** `npm audit` reports 1 moderate-severity advisory (`protobufjs` schema-shadowing,
-GHSA-f38q-mgvj-vph7) in transitive deps via `@earendil-works/pi-coding-agent`. The prior
-4 high-severity advisories (`undici`, `ws`, older `protobufjs`) were cleared by the
-`@earendil-works/pi-ai` 0.80.2 bump merged in [DOT-518](mention://issue/0f63a155-5d25-4f49-ab1b-25c7483f87cb).
+**What.** `npm audit` reported transitive advisories via `@earendil-works/pi-coding-agent`.
+The dev toolchain bump clears the `protobufjs` finding. The remaining `brace-expansion`
+GHSA-mh99-v99m-4gvg advisory is upstream-blocked: `@earendil-works/pi-coding-agent`
+0.82.1 publishes an `npm-shrinkwrap.json` that pins `brace-expansion` 5.0.7 under its
+private dependency tree, and npm root `overrides` / `npm audit fix` cannot override that
+published shrinkwrap until the upstream package republishes with `brace-expansion` 5.0.8+.
 
 **Why.** Security hygiene; keeps the dev toolchain current and aligns the roadmap status
 table with the seed backlog.
 
 **Acceptance criteria.**
-- [ ] `npm audit` reports 0 moderate/high/critical (or remaining items are documented as upstream-blocked with a tracking note).
-- [ ] `npm install && npm run ci` green.
-- [ ] If `npm audit fix` changes lockfile ranges, the bump is intentional and CHANGELOG'd.
+- [x] `npm audit` reports 0 moderate/high/critical for advisories fixable in this repo; remaining `brace-expansion` item is documented as upstream-blocked.
+- [x] `npm install && npm run ci` green.
+- [x] Lockfile/package bump is intentional and CHANGELOG'd.
 
-**Route hint.** Direct. May overlap with [S-105](#s-105). `pr_required`.
+**Route hint.** Completed in [DOT-1227](mention://issue/9a7eafb5-8f80-4ef8-9d08-cea17628b1a1).
 
 ---
 
@@ -189,7 +190,7 @@ merge or close, and collapse where they conflict.
 ---
 
 <a id="s-106"></a>
-### S-106 — `/baton:status` for terminal runs `[ready]` `M` `ux`
+### S-106 — `/baton:status` for terminal runs `[done]` `M` `ux`
 
 **What.** Once a run reaches `completed`/`failed`, `loadActiveRun` returns `null`, so
 `/baton:status` shows `NO_ACTIVE_RUN_MESSAGE` — the user cannot inspect the just-finished
@@ -199,17 +200,17 @@ run's outcome, last step, or run directory from the command surface.
 the result; today that says "no active run," which reads as a failure.
 
 **Acceptance criteria.**
-- [ ] `/baton:status` after a terminal run shows the most recent run's summary (state, last step, iteration, run directory) with a clear "this run is finished" framing, rather than the no-active-run message.
-- [ ] Behavior when no run has ever existed is unchanged (still the no-active-run message).
-- [ ] New/updated test in `tests/status.test.mjs` covering the terminal-run path.
-- [ ] CHANGELOG entry.
+- [x] `/baton:status` after a terminal run shows the most recent run's summary (state, last step, iteration, run directory) with a clear "this run is finished" framing, rather than the no-active-run message.
+- [x] Behavior when no run has ever existed is unchanged (still the no-active-run message).
+- [x] New/updated test in `tests/status.test.mjs` covering the terminal-run path.
+- [x] CHANGELOG entry.
 
-**Route hint.** Direct implementation seed. `pr_required`.
+**Route hint.** Shipped in 0.7.2.
 
 ---
 
 <a id="s-107"></a>
-### S-107 — Remove dead `clearActiveRunPointer` (or wire it up) `[ready]` `S` `cleanup`
+### S-107 — Remove dead `clearActiveRunPointer` (or wire it up) `[done]` `S` `cleanup`
 
 **What.** `clearActiveRunPointer` in `lib/run-store.ts` is exported but **never called**.
 Also note it writes `{ runId: null }` while `readActiveRunPointer` does not treat a null
@@ -221,10 +222,10 @@ read.
 thing that bites later.
 
 **Acceptance criteria.**
-- [ ] Either removed (with grep confirming no callers), OR called from a documented path (e.g. a future `/baton:cancel`) and `readActiveRunPointer` treats `{ runId: null }` as no-pointer.
-- [ ] `npm run ci` green.
+- [x] Removed (grep confirms no callers).
+- [x] `npm run ci` green.
 
-**Route hint.** Direct. Pairs naturally with the future `/baton:cancel` work (0.7.0). `pr_required`.
+**Route hint.** Completed in DOT-1090.
 
 ---
 
