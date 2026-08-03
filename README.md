@@ -1,5 +1,7 @@
 # Pi Baton
 
+[![Join dotfield.xyz on Discord](https://img.shields.io/badge/Join%20dotfield.xyz%20on%20Discord-5865F2?logo=discord&logoColor=white)](https://discord.gg/4945dXZVW5)
+
 <p align="center">
   <img src="./assets/pi-baton-icon-512.png" alt="Pi Baton icon" width="192" height="192" />
 </p>
