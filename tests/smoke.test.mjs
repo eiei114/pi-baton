@@ -6,6 +6,11 @@ import test from "node:test";
 
 const packageJson = JSON.parse(await readFile(new URL("../package.json", import.meta.url), "utf8"));
 const readme = await readFile(new URL("../README.md", import.meta.url), "utf8");
+const contributing = await readFile(new URL("../CONTRIBUTING.md", import.meta.url), "utf8");
+const publishWorkflow = await readFile(
+  new URL("../.github/workflows/publish.yml", import.meta.url),
+  "utf8",
+);
 const builtinWorkflow = await readFile(
   new URL("../workflows/default-review-loop.yaml", import.meta.url),
   "utf8",
@@ -35,6 +40,17 @@ test("README pinned install example matches package version", () => {
   const match = readme.match(/pi install npm:pi-baton@(\d+\.\d+\.\d+)/);
   assert.ok(match, "README should include a pinned npm install example");
   assert.equal(match[1], packageJson.version);
+});
+
+test("CONTRIBUTING release instructions use auto-release push flow", () => {
+  assert.doesNotMatch(contributing, /--follow-tags/);
+  assert.match(contributing, /npm version patch\s+git push/m);
+  assert.match(contributing, /auto-release/);
+});
+
+test("publish workflow avoids duplicate main push trigger for version bumps", () => {
+  assert.doesNotMatch(publishWorkflow, /branches:\s*\n\s*- main/);
+  assert.match(publishWorkflow, /tags:\s*\n\s*- 'v\*\.\*\.\*'/);
 });
 
 async function countTestCases() {
