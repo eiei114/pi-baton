@@ -42,6 +42,14 @@ test("README pinned install example matches package version", () => {
   assert.equal(match[1], packageJson.version);
 });
 
+test("ROADMAP latest release matches package version", async () => {
+  const roadmap = await readFile(new URL("../ROADMAP.md", import.meta.url), "utf8");
+  const match = roadmap.match(/Latest release \| \*\*(\d+\.\d+\.\d+)\*\*/);
+
+  assert.ok(match, "ROADMAP should document the latest release version");
+  assert.equal(match[1], packageJson.version);
+});
+
 test("CONTRIBUTING release instructions use auto-release push flow", () => {
   assert.doesNotMatch(contributing, /--follow-tags/);
   assert.match(contributing, /npm version patch\s+git push/m);
