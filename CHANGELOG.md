@@ -6,6 +6,10 @@ This project follows semantic versioning.
 
 ## [Unreleased]
 
+### Added
+
+- Added the builtin `Two-Stage Review Gauntlet` workflow to demonstrate a non-default multi-reviewer step graph.
+
 ### Changed
 
 - Bump package version to `0.7.3` for the next patch release.

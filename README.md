@@ -77,7 +77,10 @@ Then run:
 /baton:status     show the active run summary
 ```
 
-The builtin `Default Review Loop` workflow (implement → review → fix) works out of the box — no agent setup required.
+Builtin workflows work out of the box — no agent setup required:
+
+- `Default Review Loop` (`implement → review → fix`)
+- `Two-Stage Review Gauntlet` (`draft → technical_review → editorial_review`, with rejects routed through `fix`)
 
 ## Prerequisites
 
@@ -99,6 +102,8 @@ Discovery order: project `.pi/agents/` → user `~/.pi/agent/agents/` → pi-bat
 ```
 
 Pick a name and a scaffold from `default-review-loop` is written to `.pi/baton/workflows/` and opened in editor. The scaffold includes `<your-fast-model>` / `<your-strong-model>` placeholders for step-level model overrides.
+
+The shipped `workflows/` directory also includes `two-stage-review-gauntlet.yaml`, a second builtin graph that demonstrates chaining two review gates before completion.
 
 ### Workflow YAML reference
 
@@ -135,7 +140,7 @@ steps:
 | `extensions/` | Slash-command entrypoints (`/baton:new`, `/baton:start`, `/baton:run`, `/baton:status`) |
 | `lib/` | Workflow parser, run engine, subagent runner, review contract, UI widget |
 | `agents/` | Builtin `worker` and `reviewer` subagent definitions |
-| `workflows/` | Builtin `default-review-loop.yaml` |
+| `workflows/` | Builtin workflows (`default-review-loop.yaml`, `two-stage-review-gauntlet.yaml`) |
 | `assets/` | README / package branding assets |
 | `docs/` | Release and maintainer documentation |
 
