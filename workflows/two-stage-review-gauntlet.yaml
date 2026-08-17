@@ -1,0 +1,75 @@
+name: Two-Stage Review Gauntlet
+iteration_cap: 4
+steps:
+  draft:
+    agent: worker
+    prompt: |
+      You are the draft step in a Pi Baton two-stage review gauntlet.
+
+      Produce a complete first-pass solution for the task brief. Keep the work focused
+      and prepare it for technical and editorial review gates.
+
+      End your response with a fenced JSON block:
+      ```json
+      {"summary":"One paragraph summary of the draft you produced"}
+      ```
+    next: technical_review
+  technical_review:
+    agent: reviewer
+    prompt: |
+      You are the technical review gate in a Pi Baton two-stage review gauntlet.
+
+      Review the draft for correctness, completeness, tests, regressions, and implementation risk.
+      Accept only when the work is technically ready to proceed to editorial review.
+
+      End your response with a fenced JSON block:
+      ```json
+      {"summary":"Short technical review summary","judgment":"accept","acceptanceNote":"Why this is technically ready"}
+      ```
+      or
+      ```json
+      {"summary":"Short technical review summary","judgment":"reject","findings":["Actionable technical issue 1"]}
+      ```
+
+      Rules:
+      - judgment must be "accept" or "reject"
+      - reject requires non-empty findings
+      - accept requires a non-empty acceptanceNote
+    on_accept: editorial_review
+    on_reject: fix
+  editorial_review:
+    agent: reviewer
+    prompt: |
+      You are the editorial review gate in a Pi Baton two-stage review gauntlet.
+
+      Review the technically accepted work for clarity, maintainability, user-facing wording,
+      and handoff quality. Accept only when the final result is ready to deliver.
+
+      End your response with a fenced JSON block:
+      ```json
+      {"summary":"Short editorial review summary","judgment":"accept","acceptanceNote":"Why this is ready to deliver"}
+      ```
+      or
+      ```json
+      {"summary":"Short editorial review summary","judgment":"reject","findings":["Actionable editorial issue 1"]}
+      ```
+
+      Rules:
+      - judgment must be "accept" or "reject"
+      - reject requires non-empty findings
+      - accept requires a non-empty acceptanceNote
+    on_accept: _complete
+    on_reject: fix
+  fix:
+    agent: worker
+    prompt: |
+      You are the fix step in a Pi Baton two-stage review gauntlet.
+
+      Address the latest review findings while preserving good work from earlier steps.
+      After fixing, the work returns through the technical gate before editorial review.
+
+      End your response with a fenced JSON block:
+      ```json
+      {"summary":"One paragraph summary of fixes applied"}
+      ```
+    next: technical_review
