@@ -31,6 +31,7 @@ test("discoverWorkflowItems lists the two-stage review gauntlet builtin workflow
     assert.equal(item?.source, "builtin");
 
     const workflow = await loadWorkflowById(cwd, "two-stage-review-gauntlet");
+    assert.equal(workflow.iteration_cap, 4);
     assert.equal(workflow.entryStep, "draft");
     assert.equal(workflow.steps.draft.kind, "linear");
     assert.equal(workflow.steps.draft.next, "technical_review");

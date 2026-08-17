@@ -8,7 +8,7 @@ This project follows semantic versioning.
 
 ### Added
 
-- Added the builtin `Two-Stage Review Gauntlet` workflow to demonstrate a non-default multi-reviewer step graph.
+- Added the builtin `Two-Stage Review Gauntlet` workflow to demonstrate a non-default two-stage review graph.
 
 ### Changed
 
