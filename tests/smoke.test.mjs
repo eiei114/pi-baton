@@ -98,4 +98,14 @@ test("ROADMAP marks shipped two-stage review gauntlet seed as done", async () =>
   assert.match(gauntlet, /^name: Two-Stage Review Gauntlet/m);
   assert.match(roadmap, /### S-108 — Add a second builtin workflow \(non-review shape\) `\[done\]`/);
   assert.doesNotMatch(roadmap, /### S-108 — Add a second builtin workflow \(non-review shape\) `\[backlog\]`/);
+  const s108 = roadmap.match(
+    /<a id="s-108"><\/a>[\s\S]*?(?=\n---)/,
+  )?.[0];
+  assert.ok(s108);
+  assert.equal((s108.match(/^- \[x\]/gm) ?? []).length, 4);
+  assert.doesNotMatch(s108, /^- \[ \]/m);
+  assert.match(
+    roadmap,
+    /### 0\.9\.0 — Workflow authoring depth[\s\S]*?Two-stage review gauntlet builtin workflow.*shipped in 0\.7\.5\./,
+  );
 });
