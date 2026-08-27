@@ -87,3 +87,15 @@ test("ROADMAP test inventory matches the node:test suite size", async () => {
   assert.equal(Number(surfaceMapMatch[1]), testCount);
   assert.equal(Number(ciStatusMatch[1]), testCount);
 });
+
+test("ROADMAP marks shipped two-stage review gauntlet seed as done", async () => {
+  const roadmap = await readFile(new URL("../ROADMAP.md", import.meta.url), "utf8");
+  const gauntlet = await readFile(
+    new URL("../workflows/two-stage-review-gauntlet.yaml", import.meta.url),
+    "utf8",
+  );
+
+  assert.match(gauntlet, /^name: Two-Stage Review Gauntlet/m);
+  assert.match(roadmap, /### S-108 — Add a second builtin workflow \(non-review shape\) `\[done\]`/);
+  assert.doesNotMatch(roadmap, /### S-108 — Add a second builtin workflow \(non-review shape\) `\[backlog\]`/);
+});
