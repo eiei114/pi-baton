@@ -12,8 +12,8 @@
 | Latest release | **0.7.5** |
 | Next planned | **0.8.0** — post-cleanup, addressing seed backlog |
 | Stability | Early / pre-1.0; surface (`/baton:*` commands + YAML schema) is stabilizing |
-| CI | `npm run ci` green (typecheck + 65 tests + `npm pack --dry-run`) |
-| Security | `npm audit` reports 1 high-severity advisory (transitive `brace-expansion`, upstream-blocked by `@earendil-works/pi-coding-agent` shrinkwrap) |
+| CI | `npm run ci` green (typecheck + 66 tests + `npm pack --dry-run`) |
+| Security | `npm audit` reports 0 vulnerabilities |
 | npm publishing | npm Trusted Publishing (OIDC), no `NPM_TOKEN` |
 
 Release cadence so far: 0.1.0 → 0.7.5 across ~30 days. The project is in
@@ -35,7 +35,7 @@ contract, and a live progress widget.
 | `lib/` | Workflow parser, schema validation, run engine, run store, subagent runner, review contract, model routing, UI widget, status formatter |
 | `agents/` | Builtin `worker` and `reviewer` subagent definitions |
 | `workflows/*.yaml` | Builtin workflows (default review loop and two-stage review gauntlet) |
-| `tests/*.test.mjs` | 65 tests (engine, store, schema, discovery, scaffold, widget, status, agents, commands, handoff, kebab-case, model-routing, review-contract, extension-registration, smoke) |
+| `tests/*.test.mjs` | 66 tests (engine, store, schema, discovery, scaffold, widget, status, agents, commands, handoff, kebab-case, model-routing, review-contract, extension-registration, smoke) |
 
 ### Architecture in one paragraph
 
@@ -66,7 +66,7 @@ Completing the remaining `[ready]` maintenance seeds that landed in the backlog:
 
 Make authoring custom loops easier and more demonstrable.
 
-- A second builtin workflow showcasing a non-review (linear, or multi-stage) shape ([S-108](#s-108)).
+- Two-stage review gauntlet builtin workflow ([S-108](#s-108)) — shipped in 0.7.5.
 - Authoring guide in `docs/` ([S-109](#s-109)).
 - Optional: per-step `model` resolution test matrix / clearer missing-model errors.
 
@@ -230,7 +230,7 @@ thing that bites later.
 ---
 
 <a id="s-108"></a>
-### S-108 — Add a second builtin workflow (non-review shape) `[backlog]` `L` `feature`
+### S-108 — Add a second builtin workflow (non-review shape) `[done]` `L` `feature`
 
 **What.** Add a second workflow under `workflows/` that demonstrates a shape other than
 the review loop — e.g. a pure linear `draft → refine → polish` pipeline, or a
@@ -241,12 +241,12 @@ general capabilities, but only the review loop ships. A second example turns the
 into proof and lowers the authoring barrier.
 
 **Acceptance criteria.**
-- [ ] New `workflows/*.yaml` with a distinct step graph, valid against `workflow-schema`.
-- [ ] Discovered and ordered correctly by `workflow-discovery` (add/extend a test).
-- [ ] Documented in README `Workflow authoring` or a new `docs/workflows.md`.
-- [ ] `npm run ci` green; CHANGELOG entry.
+- [x] New `workflows/*.yaml` with a distinct step graph, valid against `workflow-schema`.
+- [x] Discovered and ordered correctly by `workflow-discovery` (add/extend a test).
+- [x] Documented in README `Workflow authoring` or a new `docs/workflows.md`.
+- [x] `npm run ci` green; CHANGELOG entry.
 
-**Route hint.** Feature seed — promote from `backlog` once 0.5.0 cleanup lands. `pr_required`.
+**Route hint.** Shipped in 0.7.5 as `workflows/two-stage-review-gauntlet.yaml`.
 
 ---
 
