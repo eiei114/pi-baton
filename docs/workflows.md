@@ -91,7 +91,7 @@ Review steps require agents to end with a fenced JSON block. Pi Baton parses `ju
 {"summary":"Short review summary","judgment":"reject","findings":["Actionable issue 1"]}
 ```
 
-Non-review steps only need a `summary` in their JSON block. If parsing fails on a review step, the run fails with a `ReviewContractError`.
+Non-review steps use `summary` when present and fall back to the output text when it is absent. If parsing fails on a review step, the run fails with a `ReviewContractError`.
 
 Builtin `reviewer` agent prompts include the contract. Custom review agents should instruct the model to follow the same shape.
 
