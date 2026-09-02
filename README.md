@@ -97,6 +97,8 @@ Discovery order: project `.pi/agents/` → user `~/.pi/agent/agents/` → pi-bat
 
 ## Workflow authoring
 
+See [`docs/workflows.md`](docs/workflows.md) for an end-to-end walkthrough: step kinds, transitions, the review contract, `iteration_cap`, model overrides, and agent discovery order.
+
 ```txt
 /baton:new
 ```
@@ -142,7 +144,7 @@ steps:
 | `agents/` | Builtin `worker` and `reviewer` subagent definitions |
 | `workflows/` | Builtin workflows (`default-review-loop.yaml`, `two-stage-review-gauntlet.yaml`) |
 | `assets/` | README / package branding assets |
-| `docs/` | Release and maintainer documentation |
+| `docs/` | Workflow authoring guide, release and maintainer documentation |
 
 ## Development
 
