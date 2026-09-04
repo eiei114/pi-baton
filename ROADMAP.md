@@ -10,15 +10,15 @@
 | Field | Value |
 |---|---|
 | Latest release | **0.7.5** |
-| Next planned | **0.8.0** — post-cleanup, addressing seed backlog |
+| Next planned | **0.8.0** — engine edge-case coverage + dependabot hygiene |
 | Stability | Early / pre-1.0; surface (`/baton:*` commands + YAML schema) is stabilizing |
-| CI | `npm run ci` green (typecheck + 66 tests + `npm pack --dry-run`) |
+| CI | `npm run ci` green (typecheck + 68 tests + `npm pack --dry-run`) |
 | Security | `npm audit` reports 0 vulnerabilities |
 | npm publishing | npm Trusted Publishing (OIDC), no `NPM_TOKEN` |
 
-Release cadence so far: 0.1.0 → 0.7.5 across ~30 days. The project is in
-rapid iteration; the near-term focus is **completing the seed backlog** (template cleanup,
-docs, UX polish).
+Release cadence so far: 0.1.0 → 0.7.5 across ~30 days. Template cleanup and
+authoring docs ([S-101](#s-101)–[S-109](#s-109)) are largely complete; the near-term
+focus is **engine edge-case tests**, **dependabot queue hygiene**, and **run lifecycle UX**.
 
 ## What pi-baton is
 
@@ -35,7 +35,7 @@ contract, and a live progress widget.
 | `lib/` | Workflow parser, schema validation, run engine, run store, subagent runner, review contract, model routing, UI widget, status formatter |
 | `agents/` | Builtin `worker` and `reviewer` subagent definitions |
 | `workflows/*.yaml` | Builtin workflows (default review loop and two-stage review gauntlet) |
-| `tests/*.test.mjs` | 66 tests (engine, store, schema, discovery, scaffold, widget, status, agents, commands, handoff, kebab-case, model-routing, review-contract, extension-registration, smoke) |
+| `tests/*.test.mjs` | 68 tests (engine, store, schema, discovery, scaffold, widget, status, agents, commands, handoff, kebab-case, model-routing, review-contract, extension-registration, smoke) |
 
 ### Architecture in one paragraph
 
@@ -56,19 +56,21 @@ active-run guard so a new run can start.
 - 0.6.0: Structured step envelopes, handoff payloads, review contract enforcement, model routing.
 - 0.7.0: Full command surface tests, README alignment.
 
-### 0.8.0 — Seed backlog completion (current focus)
+### 0.8.0 — Engine hardening + hygiene (current focus)
 
-Completing the remaining `[ready]` maintenance seeds that landed in the backlog:
+Template cleanup and authoring docs are done; remaining seeds target thinner test
+coverage and dependency freshness:
 
-- `/baton:status` for terminal runs ([S-106](#s-106)) — shipped in 0.7.2.
+- iteration_cap exhaustion coverage ([S-110](#s-110)).
+- Dependabot npm-dev-minor-patch batch ([S-111](#s-111)).
+- subagent-runner abort propagation ([S-112](#s-112)).
 
-### 0.9.0 — Workflow authoring depth
+### 0.9.0 — Run lifecycle UX
 
-Make authoring custom loops easier and more demonstrable.
+Make finished and past runs easier to inspect from the command surface.
 
-- Two-stage review gauntlet builtin workflow ([S-108](#s-108)) — shipped in 0.7.5.
-- Authoring guide in `docs/` ([S-109](#s-109)).
-- Optional: per-step `model` resolution test matrix / clearer missing-model errors.
+- `/baton:history` for recent terminal runs ([S-113](#s-113)).
+- Optional: clearer missing-model error messages when a step `model` placeholder is unresolved.
 
 > Releases are driven by merged work, not calendar dates. Items move up or down as
 > seeds land; this section is a directional guide, not a commitment.
@@ -251,7 +253,7 @@ into proof and lowers the authoring barrier.
 ---
 
 <a id="s-109"></a>
-### S-109 — Authoring guide for custom workflows `[backlog]` `M` `docs`
+### S-109 — Authoring guide for custom workflows `[done]` `M` `docs`
 
 **What.** README has a YAML reference but no walkthrough for authoring a custom loop
 (choosing agents, when to use `on_accept` vs `next`, how `iteration_cap` interacts with
@@ -260,11 +262,93 @@ into proof and lowers the authoring barrier.
 **Why.** Lowers the barrier to the core customization story; complements [S-108](#s-108).
 
 **Acceptance criteria.**
-- [ ] `docs/workflows.md` covers: step kinds, transitions, review contract, iteration cap, model overrides, agent discovery order.
-- [ ] Cross-linked from README.
-- [ ] No stale template content introduced.
+- [x] `docs/workflows.md` covers: step kinds, transitions, review contract, iteration cap, model overrides, agent discovery order.
+- [x] Cross-linked from README.
+- [x] No stale template content introduced.
 
-**Route hint.** Docs seed. Promote alongside [S-108](#s-108). `pr_required`.
+**Route hint.** Shipped in 0.7.5 via DOT-1691 / PR #51.
+
+---
+
+<a id="s-110"></a>
+### S-110 — iteration_cap exhaustion status coverage `[ready]` `S` `test`
+
+**What.** Add a focused test that asserts `/baton:status` (or `formatStatusSummary`) surfaces
+the iteration-cap failure reason after a run fails at the cap — not just that
+`runContinuous` returns a `failureReason` matching `/Iteration cap/`.
+
+**Why.** The engine path is covered in `run-engine.test.mjs`, but the user-facing status
+formatter path is thinner. ROADMAP themes call out iteration_cap exhaustion messaging as
+a gap.
+
+**Acceptance criteria.**
+- [ ] New or extended test in `tests/status.test.mjs` (or adjacent) covering terminal
+  failed state with iteration-cap reason visible in status output.
+- [ ] `npm run ci` green.
+- [ ] CHANGELOG entry under `[Unreleased]`.
+
+**Route hint.** Test-only seed. ~30 min. `pr_required`.
+
+---
+
+<a id="s-111"></a>
+### S-111 — Triage dependabot npm-dev-minor-patch batch `[ready]` `S` `deps`
+
+**What.** Review open PR #49 (`npm-dev-minor-patch` group: `@earendil-works/pi-ai` and
+`@earendil-works/pi-coding-agent` bumps). Merge if CI green and no breaking API changes,
+or close with a documented rationale if blocked.
+
+**Why.** The dependabot queue should stay near-zero; a two-package dev bump left open for
+weeks becomes a merge-conflict magnet on a fast-moving Pi toolchain.
+
+**Acceptance criteria.**
+- [ ] PR #49 merged or closed with rationale recorded in the PR comment.
+- [ ] Post-merge `npm run ci` green on `main` (if merged).
+- [ ] ROADMAP/CHANGELOG updated only if the bump changes documented toolchain pins.
+
+**Route hint.** Dependency hygiene seed. ~30–45 min. Human may need to approve merge.
+
+---
+
+<a id="s-112"></a>
+### S-112 — subagent-runner abort signal propagation test `[ready]` `M` `test`
+
+**What.** Add a unit test that verifies an in-flight `StepRunner` created by
+`createSubagentStepRunner` terminates promptly when `request.signal` aborts mid-step.
+The abort listener and SIGTERM/SIGKILL fallback exist in `lib/subagent-runner.ts` but
+have no dedicated test.
+
+**Why.** Abort propagation is a correctness edge for long-running steps; untested kill
+paths tend to regress silently when Pi CLI flags or process spawning change.
+
+**Acceptance criteria.**
+- [ ] New test in `tests/` exercising abort during a mocked or slow step.
+- [ ] `npm run ci` green.
+- [ ] No production behavior change unless a bug is found and fixed.
+
+**Route hint.** Test-only seed. ~45–60 min. `pr_required`.
+
+---
+
+<a id="s-113"></a>
+### S-113 — `/baton:history` list recent terminal runs `[backlog]` `L` `ux`
+
+**What.** Add a `/baton:history` command that lists the N most recent terminal runs
+(`completed` / `failed`) under `.pi/baton/runs/`, showing run id, workflow, state, and
+run directory. Complements `/baton:status` which only surfaces the single most recent
+terminal run.
+
+**Why.** Past runs are persisted but unreadable from the command surface after going
+terminal except via filesystem spelunking. A history command closes the run-lifecycle gap
+called out in ROADMAP themes.
+
+**Acceptance criteria.**
+- [ ] `/baton:history` registered in `extensions/index.ts` with sensible default limit.
+- [ ] Tests for empty, single, and multi-run cases.
+- [ ] README and `docs/workflows.md` cross-link updated.
+- [ ] CHANGELOG entry.
+
+**Route hint.** UX feature seed. ~75–90 min. Promote after [S-110](#s-110)–[S-112](#s-112). `pr_required`.
 
 ---
 
@@ -274,12 +358,13 @@ into proof and lowers the authoring barrier.
   of pi-baton needs. Template bootstrap docs have been cleaned up ([S-101](#s-101), [S-102](#s-102), [S-103](#s-103)).
   Ongoing rule: when adding `docs/`, ask "would an installer of this package read this?"
 - **Test coverage of the engine edge cases.** Core paths (review contract, run-state
-  transitions, single-active-run guard) are covered; thinner areas include
-  `iteration_cap` exhaustion messaging, abort/timeout propagation in
-  `subagent-runner`, and the terminal-run status path ([S-106](#s-106)).
+  transitions, single-active-run guard, terminal-run status) are covered; thinner areas
+  include `iteration_cap` exhaustion status formatting ([S-110](#s-110)) and abort
+  propagation in `subagent-runner` ([S-112](#s-112)).
 - **Run lifecycle beyond the active run.** Past runs are persisted under
-  `.pi/baton/runs/` but unreadable from the command surface after going terminal. A
-  future `/baton:history` or `/baton:cancel` would address this.
+  `.pi/baton/runs/` but only the most recent terminal run is visible via
+  `/baton:status`. `/baton:history` ([S-113](#s-113)) or a future `/baton:cancel`
+  would address the rest.
 - **Dependency freshness.** Keep the dependabot queue near-zero; pi-baton sits on top of
   fast-moving `@earendil-works/pi-*` packages and a major bump left to rot becomes a
   blocker.

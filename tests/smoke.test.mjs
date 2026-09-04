@@ -106,6 +106,30 @@ test("ROADMAP marks shipped two-stage review gauntlet seed as done", async () =>
   assert.doesNotMatch(s108, /^- \[ \]/m);
   assert.match(
     roadmap,
-    /### 0\.9\.0 — Workflow authoring depth[\s\S]*?Two-stage review gauntlet builtin workflow.*shipped in 0\.7\.5\./,
+    /### 0\.9\.0 — Run lifecycle UX[\s\S]*?\/baton:history.*\[S-113\]/,
   );
+});
+
+test("ROADMAP marks shipped workflow authoring guide seed as done", async () => {
+  const roadmap = await readFile(new URL("../ROADMAP.md", import.meta.url), "utf8");
+  const workflowsDoc = await readFile(new URL("../docs/workflows.md", import.meta.url), "utf8");
+
+  assert.match(workflowsDoc, /^# Custom workflow authoring/m);
+  assert.match(roadmap, /### S-109 — Authoring guide for custom workflows `\[done\]`/);
+  assert.doesNotMatch(roadmap, /### S-109 — Authoring guide for custom workflows `\[backlog\]`/);
+  const s109 = roadmap.match(/<a id="s-109"><\/a>[\s\S]*?(?=\n---)/)?.[0];
+  assert.ok(s109);
+  assert.equal((s109.match(/^- \[x\]/gm) ?? []).length, 3);
+  assert.doesNotMatch(s109, /^- \[ \]/m);
+  assert.match(readme, /docs\/workflows\.md/);
+});
+
+test("ROADMAP lists at least three ready maintenance seed candidates", async () => {
+  const roadmap = await readFile(new URL("../ROADMAP.md", import.meta.url), "utf8");
+  const readySeeds = roadmap.match(/^### S-\d+ — .* `\[ready\]`.*$/gm) ?? [];
+
+  assert.ok(readySeeds.length >= 3, "ROADMAP should list at least three ready maintenance seeds");
+  for (const seed of readySeeds) {
+    assert.match(seed, /`(S|M|L)`/, "each ready seed should declare a size");
+  }
 });
