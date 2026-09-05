@@ -9,6 +9,7 @@ This project follows semantic versioning.
 ### Changed
 
 - Updated ROADMAP.md to mark S-108 done and refresh the security status table after the two-stage review gauntlet shipped in 0.7.5.
+- Aligned ROADMAP S-109 status with the shipped `docs/workflows.md` authoring guide.
 
 ## [0.7.5] - 2026-08-22
 

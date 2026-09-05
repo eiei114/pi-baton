@@ -12,7 +12,7 @@
 | Latest release | **0.7.5** |
 | Next planned | **0.8.0** — post-cleanup, addressing seed backlog |
 | Stability | Early / pre-1.0; surface (`/baton:*` commands + YAML schema) is stabilizing |
-| CI | `npm run ci` green (typecheck + 66 tests + `npm pack --dry-run`) |
+| CI | `npm run ci` green (typecheck + 67 tests + `npm pack --dry-run`) |
 | Security | `npm audit` reports 0 vulnerabilities |
 | npm publishing | npm Trusted Publishing (OIDC), no `NPM_TOKEN` |
 
@@ -35,7 +35,7 @@ contract, and a live progress widget.
 | `lib/` | Workflow parser, schema validation, run engine, run store, subagent runner, review contract, model routing, UI widget, status formatter |
 | `agents/` | Builtin `worker` and `reviewer` subagent definitions |
 | `workflows/*.yaml` | Builtin workflows (default review loop and two-stage review gauntlet) |
-| `tests/*.test.mjs` | 66 tests (engine, store, schema, discovery, scaffold, widget, status, agents, commands, handoff, kebab-case, model-routing, review-contract, extension-registration, smoke) |
+| `tests/*.test.mjs` | 67 tests (engine, store, schema, discovery, scaffold, widget, status, agents, commands, handoff, kebab-case, model-routing, review-contract, extension-registration, smoke) |
 
 ### Architecture in one paragraph
 
@@ -67,7 +67,7 @@ Completing the remaining `[ready]` maintenance seeds that landed in the backlog:
 Make authoring custom loops easier and more demonstrable.
 
 - Two-stage review gauntlet builtin workflow ([S-108](#s-108)) — shipped in 0.7.5.
-- Authoring guide in `docs/` ([S-109](#s-109)).
+- Authoring guide in `docs/` ([S-109](#s-109)) — shipped in 0.7.5.
 - Optional: per-step `model` resolution test matrix / clearer missing-model errors.
 
 > Releases are driven by merged work, not calendar dates. Items move up or down as
@@ -251,7 +251,7 @@ into proof and lowers the authoring barrier.
 ---
 
 <a id="s-109"></a>
-### S-109 — Authoring guide for custom workflows `[backlog]` `M` `docs`
+### S-109 — Authoring guide for custom workflows `[done]` `M` `docs`
 
 **What.** README has a YAML reference but no walkthrough for authoring a custom loop
 (choosing agents, when to use `on_accept` vs `next`, how `iteration_cap` interacts with
@@ -260,11 +260,11 @@ into proof and lowers the authoring barrier.
 **Why.** Lowers the barrier to the core customization story; complements [S-108](#s-108).
 
 **Acceptance criteria.**
-- [ ] `docs/workflows.md` covers: step kinds, transitions, review contract, iteration cap, model overrides, agent discovery order.
-- [ ] Cross-linked from README.
-- [ ] No stale template content introduced.
+- [x] `docs/workflows.md` covers: step kinds, transitions, review contract, iteration cap, model overrides, agent discovery order.
+- [x] Cross-linked from README.
+- [x] No stale template content introduced.
 
-**Route hint.** Docs seed. Promote alongside [S-108](#s-108). `pr_required`.
+**Route hint.** Shipped in 0.7.5 as `docs/workflows.md`.
 
 ---
 
