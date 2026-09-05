@@ -112,16 +112,25 @@ test("ROADMAP marks shipped two-stage review gauntlet seed as done", async () =>
 
 test("ROADMAP marks shipped workflow authoring guide seed as done", async () => {
   const roadmap = await readFile(new URL("../ROADMAP.md", import.meta.url), "utf8");
-  const workflowsDoc = await readFile(new URL("../docs/workflows.md", import.meta.url), "utf8");
+  const authoringGuide = await readFile(
+    new URL("../docs/workflows.md", import.meta.url),
+    "utf8",
+  );
 
-  assert.match(workflowsDoc, /^# Custom workflow authoring/m);
+  assert.match(authoringGuide, /^# Custom workflow authoring/m);
+  assert.match(authoringGuide, /## Step kinds/);
+  assert.match(authoringGuide, /## Transitions/);
+  assert.match(authoringGuide, /## Review contract/);
+  assert.match(authoringGuide, /## `iteration_cap`/);
+  assert.match(authoringGuide, /## Model overrides/);
+  assert.match(authoringGuide, /## Agent discovery order/);
+  assert.match(readme, /\[`docs\/workflows\.md`\]\(docs\/workflows\.md\)/);
   assert.match(roadmap, /### S-109 — Authoring guide for custom workflows `\[done\]`/);
   assert.doesNotMatch(roadmap, /### S-109 — Authoring guide for custom workflows `\[backlog\]`/);
   const s109 = roadmap.match(/<a id="s-109"><\/a>[\s\S]*?(?=\n---)/)?.[0];
   assert.ok(s109);
   assert.equal((s109.match(/^- \[x\]/gm) ?? []).length, 3);
   assert.doesNotMatch(s109, /^- \[ \]/m);
-  assert.match(readme, /docs\/workflows\.md/);
 });
 
 test("ROADMAP lists at least three ready maintenance seed candidates", async () => {

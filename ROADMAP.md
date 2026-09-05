@@ -266,7 +266,7 @@ into proof and lowers the authoring barrier.
 - [x] Cross-linked from README.
 - [x] No stale template content introduced.
 
-**Route hint.** Shipped in 0.7.5 via DOT-1691 / PR #51.
+**Route hint.** Shipped in 0.7.5 as `docs/workflows.md`.
 
 ---
 
