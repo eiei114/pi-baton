@@ -8,6 +8,7 @@ This project follows semantic versioning.
 
 ### Changed
 
+- Refreshed ROADMAP.md: marked S-109 done, updated release direction for 0.8.0/0.9.0, and added maintenance seed candidates S-110 through S-113 for the weekly seed planner.
 - Updated ROADMAP.md to mark S-108 done and refresh the security status table after the two-stage review gauntlet shipped in 0.7.5.
 - Aligned ROADMAP S-109 status with the shipped `docs/workflows.md` authoring guide.
 
