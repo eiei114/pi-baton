@@ -12,7 +12,7 @@
 | Latest release | **0.7.5** |
 | Next planned | **0.8.0** — engine edge-case coverage + dependabot hygiene |
 | Stability | Early / pre-1.0; surface (`/baton:*` commands + YAML schema) is stabilizing |
-| CI | `npm run ci` green (typecheck + 68 tests + `npm pack --dry-run`) |
+| CI | `npm run ci` green (typecheck + 71 tests + `npm pack --dry-run`) |
 | Security | `npm audit` reports 0 vulnerabilities |
 | npm publishing | npm Trusted Publishing (OIDC), no `NPM_TOKEN` |
 
@@ -35,7 +35,7 @@ contract, and a live progress widget.
 | `lib/` | Workflow parser, schema validation, run engine, run store, subagent runner, review contract, model routing, UI widget, status formatter |
 | `agents/` | Builtin `worker` and `reviewer` subagent definitions |
 | `workflows/*.yaml` | Builtin workflows (default review loop and two-stage review gauntlet) |
-| `tests/*.test.mjs` | 68 tests (engine, store, schema, discovery, scaffold, widget, status, agents, commands, handoff, kebab-case, model-routing, review-contract, extension-registration, smoke) |
+| `tests/*.test.mjs` | 71 tests (engine, store, schema, discovery, scaffold, widget, status, agents, commands, handoff, kebab-case, model-routing, review-contract, extension-registration, smoke) |
 
 ### Architecture in one paragraph
 
@@ -61,7 +61,7 @@ active-run guard so a new run can start.
 Template cleanup and authoring docs are done; remaining seeds target thinner test
 coverage and dependency freshness:
 
-- iteration_cap exhaustion coverage ([S-110](#s-110)).
+- iteration_cap exhaustion coverage ([S-110](#s-110)) — done.
 - Dependabot npm-dev-minor-patch batch ([S-111](#s-111)).
 - subagent-runner abort propagation ([S-112](#s-112)).
 
@@ -271,7 +271,7 @@ into proof and lowers the authoring barrier.
 ---
 
 <a id="s-110"></a>
-### S-110 — iteration_cap exhaustion status coverage `[ready]` `S` `test`
+### S-110 — iteration_cap exhaustion status coverage `[done]` `S` `test`
 
 **What.** Add a focused test that asserts `/baton:status` (or `formatStatusSummary`) surfaces
 the iteration-cap failure reason after a run fails at the cap — not just that
@@ -282,10 +282,10 @@ formatter path is thinner. ROADMAP themes call out iteration_cap exhaustion mess
 a gap.
 
 **Acceptance criteria.**
-- [ ] New or extended test in `tests/status.test.mjs` (or adjacent) covering terminal
+- [x] New or extended test in `tests/status.test.mjs` (or adjacent) covering terminal
   failed state with iteration-cap reason visible in status output.
-- [ ] `npm run ci` green.
-- [ ] CHANGELOG entry under `[Unreleased]`.
+- [x] `npm run ci` green.
+- [x] CHANGELOG entry under `[Unreleased]`.
 
 **Route hint.** Test-only seed. ~30 min. `pr_required`.
 
@@ -331,7 +331,7 @@ paths tend to regress silently when Pi CLI flags or process spawning change.
 ---
 
 <a id="s-113"></a>
-### S-113 — `/baton:history` list recent terminal runs `[backlog]` `L` `ux`
+### S-113 — `/baton:history` list recent terminal runs `[ready]` `L` `ux`
 
 **What.** Add a `/baton:history` command that lists the N most recent terminal runs
 (`completed` / `failed`) under `.pi/baton/runs/`, showing run id, workflow, state, and
@@ -348,7 +348,7 @@ called out in ROADMAP themes.
 - [ ] README and `docs/workflows.md` cross-link updated.
 - [ ] CHANGELOG entry.
 
-**Route hint.** UX feature seed. ~75–90 min. Promote after [S-110](#s-110)–[S-112](#s-112). `pr_required`.
+**Route hint.** UX feature seed. ~75–90 min. Promote after [S-111](#s-111)–[S-112](#s-112). `pr_required`.
 
 ---
 
@@ -359,8 +359,7 @@ called out in ROADMAP themes.
   Ongoing rule: when adding `docs/`, ask "would an installer of this package read this?"
 - **Test coverage of the engine edge cases.** Core paths (review contract, run-state
   transitions, single-active-run guard, terminal-run status) are covered; thinner areas
-  include `iteration_cap` exhaustion status formatting ([S-110](#s-110)) and abort
-  propagation in `subagent-runner` ([S-112](#s-112)).
+  include abort propagation in `subagent-runner` ([S-112](#s-112)).
 - **Run lifecycle beyond the active run.** Past runs are persisted under
   `.pi/baton/runs/` but only the most recent terminal run is visible via
   `/baton:status`. `/baton:history` ([S-113](#s-113)) or a future `/baton:cancel`

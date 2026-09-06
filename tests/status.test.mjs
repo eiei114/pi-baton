@@ -5,8 +5,23 @@ import { join } from "node:path";
 import test from "node:test";
 
 const { formatStatusSummary, NO_ACTIVE_RUN_MESSAGE } = await import("../lib/status.ts");
+const { runContinuous } = await import("../lib/run-engine.ts");
 const { createIdleRun, loadMostRecentTerminalRun, updateRunState } = await import("../lib/run-store.ts");
 const { getPackageWorkflowsDir } = await import("../lib/paths.ts");
+
+function reviewOutput(judgment) {
+  return `reviewed\n\`\`\`json\n${JSON.stringify({
+    summary: "review summary",
+    judgment,
+    ...(judgment === "accept"
+      ? { acceptanceNote: "approved" }
+      : { findings: ["needs fix"] }),
+  })}\n\`\`\``;
+}
+
+function workerOutput(summary) {
+  return `done\n\`\`\`json\n${JSON.stringify({ summary })}\n\`\`\``;
+}
 
 const manifest = {
   id: "20260620000000-abcd1234",
@@ -78,6 +93,37 @@ test("formatStatusSummary shows finished framing for terminal runs", () => {
   assert.match(failed, /This Baton run has finished \(failed\)\./);
   assert.match(failed, /last step: implement/);
   assert.match(failed, /run state: failed/);
+  assert.doesNotMatch(failed, /failure:/);
+});
+
+test("formatStatusSummary surfaces iteration-cap failure reason for terminal failed runs", () => {
+  const iterationCapFailure = formatStatusSummary({
+    ...manifest,
+    state: "failed",
+    currentStep: "review",
+    lastStep: "fix",
+    iteration: 2,
+    iterationCap: 2,
+    failureReason: "Iteration cap (2) reached",
+  });
+
+  assert.match(iterationCapFailure, /This Baton run has finished \(failed\)\./);
+  assert.match(iterationCapFailure, /failure: Iteration cap \(2\) reached/);
+  assert.match(iterationCapFailure, /run state: failed/);
+});
+
+test("formatStatusSummary surfaces non-iteration-cap failure reasons", () => {
+  const contractFailure = formatStatusSummary({
+    ...manifest,
+    state: "failed",
+    currentStep: null,
+    lastStep: "review",
+    iteration: 1,
+    failureReason: "Review reject requires non-empty findings",
+  });
+
+  assert.match(contractFailure, /failure: Review reject requires non-empty findings/);
+  assert.doesNotMatch(contractFailure, /Iteration cap/);
 });
 
 test("loadMostRecentTerminalRun exposes the latest completed or failed run", async () => {
@@ -112,6 +158,46 @@ test("loadMostRecentTerminalRun exposes the latest completed or failed run", asy
     assert.match(summary, /This Baton run has finished \(completed\)\./);
     assert.match(summary, /task brief: Terminal status test/);
     assert.match(summary, /run directory: \.pi\/baton\/runs\//);
+  } finally {
+    await rm(cwd, { recursive: true, force: true });
+  }
+});
+
+test("loadMostRecentTerminalRun status output includes iteration-cap failure reason", async () => {
+  const cwd = await mkdtemp(join(tmpdir(), "pi-baton-status-iteration-cap-"));
+
+  try {
+    const manifest = await createIdleRun(cwd, {
+      workflowId: "default-review-loop",
+      workflowName: "Default Review Loop",
+      workflowPath: join(getPackageWorkflowsDir(), "default-review-loop.yaml"),
+      workflowSource: "builtin",
+      taskBrief: "Iteration cap status test",
+      targetDirectory: cwd,
+      entryStep: "implement",
+      iterationCap: 1,
+    });
+
+    await runContinuous({
+      cwd,
+      runId: manifest.id,
+      stepRunner: async (request) => {
+        if (request.agent === "worker") {
+          return { exitCode: 0, outputText: workerOutput("work"), stderr: "" };
+        }
+
+        return { exitCode: 0, outputText: reviewOutput("reject"), stderr: "" };
+      },
+    });
+
+    const terminal = await loadMostRecentTerminalRun(cwd);
+    assert.equal(terminal?.state, "failed");
+    assert.match(terminal?.failureReason ?? "", /Iteration cap \(1\) reached/);
+
+    const summary = formatStatusSummary(terminal);
+    assert.match(summary, /This Baton run has finished \(failed\)\./);
+    assert.match(summary, /failure: Iteration cap \(1\) reached/);
+    assert.match(summary, /task brief: Iteration cap status test/);
   } finally {
     await rm(cwd, { recursive: true, force: true });
   }
