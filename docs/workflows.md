@@ -126,11 +126,9 @@ Step-level overrides apply per subagent invocation; other steps in the same run 
 
 Each step's `agent` value must match a Pi subagent `name` from frontmatter. Pi Baton merges agents from three locations; when names collide, **project overrides user overrides builtin**:
 
-1. **pi-baton builtin** — `agents/` in the package (`worker`, `reviewer`)
+1. **Project** — nearest `.pi/agents/*.md` walking up from the run's target directory
 2. **User** — `~/.pi/agent/agents/*.md`
-3. **Project** — nearest `.pi/agents/*.md` walking up from the run's target directory
-
-Discovery order (highest priority first): project `.pi/agents/` → user `~/.pi/agent/agents/` → pi-baton builtin.
+3. **pi-baton builtin** — `agents/` in the package (`worker`, `reviewer`)
 
 If a workflow references an agent name that cannot be resolved, validation fails before the run starts.
 
@@ -145,6 +143,7 @@ To customize behavior, add `.pi/agents/worker.md` or `.pi/agents/reviewer.md` in
 5. Write prompts that end with the JSON contract (review steps must include judgment rules).
 6. Wire transitions: linear steps use `next`; review steps use `on_accept` / `on_reject`.
 7. Run `/baton:start` to pick the workflow, then `/baton:run` to execute.
+8. Run `/baton:status` to inspect the active run, or the most recent finished run after `/baton:run` completes.
 
 ## Examples
 
