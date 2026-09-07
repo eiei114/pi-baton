@@ -42,6 +42,10 @@ test("README pinned install example matches package version", () => {
   assert.equal(match[1], packageJson.version);
 });
 
+test("README quick start documents terminal run fallback for /baton:status", () => {
+  assert.match(readme, /\/baton:status\s+show the active run summary, or the most recent finished run/);
+});
+
 test("ROADMAP latest release matches package version", async () => {
   const roadmap = await readFile(new URL("../ROADMAP.md", import.meta.url), "utf8");
   const match = roadmap.match(/Latest release \| \*\*(\d+\.\d+\.\d+)\*\*/);

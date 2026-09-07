@@ -74,7 +74,7 @@ Then run:
 /baton:new        create a workflow scaffold
 /baton:start      choose workflow + task brief → idle run
 /baton:run        execute run to terminal state (with live widget)
-/baton:status     show the active run summary
+/baton:status     show the active run summary, or the most recent finished run
 ```
 
 Builtin workflows work out of the box — no agent setup required:
