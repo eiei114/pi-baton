@@ -6,6 +6,10 @@ This project follows semantic versioning.
 
 ## [Unreleased]
 
+### Added
+
+- `/baton:status` and `formatStatusSummary` now include the stored `failure` reason for terminal failed runs, with status tests covering iteration-cap exhaustion and other failure paths.
+
 ### Changed
 
 - Refreshed ROADMAP.md: marked S-109 done, updated release direction for 0.8.0/0.9.0, and added maintenance seed candidates S-110 through S-113 for the weekly seed planner.

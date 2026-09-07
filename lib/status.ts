@@ -21,6 +21,10 @@ export function formatStatusSummary(manifest: RunManifest): string {
     `run directory: .pi/baton/runs/${manifest.id}`,
   );
 
+  if (manifest.failureReason) {
+    lines.push(`failure: ${manifest.failureReason}`);
+  }
+
   return lines.join("\n");
 }
 
