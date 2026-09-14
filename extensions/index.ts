@@ -10,8 +10,13 @@ import {
   createIdleRun,
   loadActiveRun,
   loadMostRecentTerminalRun,
+  loadTerminalRunHistory,
 } from "../lib/run-store.ts";
-import { NO_ACTIVE_RUN_MESSAGE, formatStatusSummary } from "../lib/status.ts";
+import {
+  NO_ACTIVE_RUN_MESSAGE,
+  formatHistorySummary,
+  formatStatusSummary,
+} from "../lib/status.ts";
 import { createSubagentRunner } from "../lib/subagent-runner.ts";
 import { WorkflowNameCollisionError, createWorkflowScaffold } from "../lib/workflow-scaffold.ts";
 import { WorkflowValidationError } from "../lib/workflow-schema.ts";
@@ -197,6 +202,14 @@ export default function (pi: ExtensionAPI) {
       }
 
       ctx.ui.notify(formatStatusSummary(manifest), "info");
+    },
+  });
+
+  pi.registerCommand("baton:history", {
+    description: "List recent completed or failed Baton runs from persisted history",
+    handler: async (_args, ctx) => {
+      const history = await loadTerminalRunHistory(ctx.cwd);
+      ctx.ui.notify(formatHistorySummary(history), "info");
     },
   });
 }

@@ -15,6 +15,6 @@ test("extension registers Baton commands only", () => {
 
   assert.deepEqual(
     commands.map(([name]) => name).sort(),
-    ["baton:new", "baton:run", "baton:start", "baton:status"],
+    ["baton:history", "baton:new", "baton:run", "baton:start", "baton:status"],
   );
 });
