@@ -9,10 +9,10 @@
 
 | Field | Value |
 |---|---|
-| Latest release | **0.7.5** |
-| Next planned | **0.8.0** — engine edge-case coverage + dependabot hygiene |
+| Latest release | **0.8.0** |
+| Next planned | **0.8.1** — dependabot hygiene + engine edge-case coverage |
 | Stability | Early / pre-1.0; surface (`/baton:*` commands + YAML schema) is stabilizing |
-| CI | `npm run ci` green (typecheck + 72 tests + `npm pack --dry-run`) |
+| CI | `npm run ci` green (typecheck + 80 tests + `npm pack --dry-run`) |
 | Security | `npm audit` reports 0 vulnerabilities |
 | npm publishing | npm Trusted Publishing (OIDC), no `NPM_TOKEN` |
 
@@ -31,11 +31,11 @@ contract, and a live progress widget.
 
 | Path | Role |
 |---|---|
-| `extensions/index.ts` | 4 slash commands: `/baton:new`, `/baton:start`, `/baton:run`, `/baton:status` |
+| `extensions/index.ts` | 5 slash commands: `/baton:new`, `/baton:start`, `/baton:run`, `/baton:status`, `/baton:history` |
 | `lib/` | Workflow parser, schema validation, run engine, run store, subagent runner, review contract, model routing, UI widget, status formatter |
 | `agents/` | Builtin `worker` and `reviewer` subagent definitions |
 | `workflows/*.yaml` | Builtin workflows (default review loop and two-stage review gauntlet) |
-| `tests/*.test.mjs` | 72 tests (engine, store, schema, discovery, scaffold, widget, status, agents, commands, handoff, kebab-case, model-routing, review-contract, extension-registration, smoke) |
+| `tests/*.test.mjs` | 80 tests (engine, store, schema, discovery, scaffold, widget, status, history, agents, commands, handoff, kebab-case, model-routing, review-contract, extension-registration, smoke) |
 
 ### Architecture in one paragraph
 
@@ -69,8 +69,8 @@ coverage and dependency freshness:
 
 Make finished and past runs easier to inspect from the command surface.
 
-- `/baton:history` for recent terminal runs ([S-113](#s-113)).
-- Optional: clearer missing-model error messages when a step `model` placeholder is unresolved.
+- `/baton:history` for recent terminal runs ([S-113](#s-113)) — done in 0.8.0.
+- Optional: clearer missing-model error messages when a step `model` placeholder is unresolved ([S-114](#s-114)).
 
 > Releases are driven by merged work, not calendar dates. Items move up or down as
 > seeds land; this section is a directional guide, not a commitment.
@@ -331,7 +331,7 @@ paths tend to regress silently when Pi CLI flags or process spawning change.
 ---
 
 <a id="s-113"></a>
-### S-113 — `/baton:history` list recent terminal runs `[ready]` `L` `ux`
+### S-113 — `/baton:history` list recent terminal runs `[done]` `L` `ux`
 
 **What.** Add a `/baton:history` command that lists the N most recent terminal runs
 (`completed` / `failed`) under `.pi/baton/runs/`, showing run id, workflow, state, and
@@ -343,12 +343,31 @@ terminal except via filesystem spelunking. A history command closes the run-life
 called out in ROADMAP themes.
 
 **Acceptance criteria.**
-- [ ] `/baton:history` registered in `extensions/index.ts` with sensible default limit.
-- [ ] Tests for empty, single, and multi-run cases.
-- [ ] README and `docs/workflows.md` cross-link updated.
-- [ ] CHANGELOG entry.
+- [x] `/baton:history` registered in `extensions/index.ts` with sensible default limit.
+- [x] Tests for empty, single, and multi-run cases.
+- [x] README and `docs/workflows.md` cross-link updated.
+- [x] CHANGELOG entry.
 
 **Route hint.** UX feature seed. ~75–90 min. Promote after [S-111](#s-111)–[S-112](#s-112). `pr_required`.
+
+---
+
+<a id="s-114"></a>
+### S-114 — Clearer unresolved step model placeholder errors `[ready]` `S` `ux`
+
+**What.** When a workflow step references an unresolved `<your-*-model>` placeholder,
+surface a clearer Baton error that names the step, agent, and placeholder value instead of
+a generic model-resolution failure.
+
+**Why.** Custom workflow authoring is the main path to misconfigured models; clearer
+errors reduce trial-and-error during `/baton:start` and `/baton:run`.
+
+**Acceptance criteria.**
+- [ ] Missing or placeholder step models produce an actionable error naming step + agent.
+- [ ] Tests cover at least one unresolved placeholder path.
+- [ ] README or `docs/workflows.md` mentions the improved error briefly if user-facing copy changes.
+
+**Route hint.** Small UX polish from the 0.9.0 lifecycle theme. ~30–45 min. `pr_required`.
 
 ---
 
@@ -361,9 +380,8 @@ called out in ROADMAP themes.
   transitions, single-active-run guard, terminal-run status) are covered; thinner areas
   include abort propagation in `subagent-runner` ([S-112](#s-112)).
 - **Run lifecycle beyond the active run.** Past runs are persisted under
-  `.pi/baton/runs/` but only the most recent terminal run is visible via
-  `/baton:status`. `/baton:history` ([S-113](#s-113)) or a future `/baton:cancel`
-  would address the rest.
+  `.pi/baton/runs/` and recent terminal runs are listed via `/baton:history`
+  ([S-113](#s-113)). A future `/baton:cancel` would address active-run cancellation.
 - **Dependency freshness.** Keep the dependabot queue near-zero; pi-baton sits on top of
   fast-moving `@earendil-works/pi-*` packages and a major bump left to rot becomes a
   blocker.

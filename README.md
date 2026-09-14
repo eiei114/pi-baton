@@ -39,7 +39,7 @@ pi install npm:pi-baton
 Pin a specific version when you want reproducible installs:
 
 ```bash
-pi install npm:pi-baton@0.7.5
+pi install npm:pi-baton@0.8.0
 ```
 
 Install into the current project instead of your user Pi settings:
@@ -75,7 +75,10 @@ Then run:
 /baton:start      choose workflow + task brief → idle run
 /baton:run        execute run to terminal state (with live widget)
 /baton:status     show the active run summary, or the most recent finished run
+/baton:history    list recent completed or failed runs from persisted history
 ```
+
+Use `/baton:status` for the active run or the single most recent finished run. Use `/baton:history` when you need a short list of recent completed or failed runs and their `.pi/baton/runs/<id>` directories.
 
 Builtin workflows work out of the box — no agent setup required:
 
@@ -139,7 +142,7 @@ steps:
 
 | Path | Purpose |
 |---|---|
-| `extensions/` | Slash-command entrypoints (`/baton:new`, `/baton:start`, `/baton:run`, `/baton:status`) |
+| `extensions/` | Slash-command entrypoints (`/baton:new`, `/baton:start`, `/baton:run`, `/baton:status`, `/baton:history`) |
 | `lib/` | Workflow parser, run engine, subagent runner, review contract, UI widget |
 | `agents/` | Builtin `worker` and `reviewer` subagent definitions |
 | `workflows/` | Builtin workflows (`default-review-loop.yaml`, `two-stage-review-gauntlet.yaml`) |

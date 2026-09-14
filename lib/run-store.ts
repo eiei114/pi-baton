@@ -1,4 +1,4 @@
-import { readFile, writeFile } from "node:fs/promises";
+import { readdir, readFile, writeFile } from "node:fs/promises";
 import { randomUUID } from "node:crypto";
 import {
   ensureBatonScaffolding,
@@ -6,6 +6,7 @@ import {
   getActiveRunPointerPath,
   getRunManifestPath,
   getRunStepsDir,
+  getRunsDir,
 } from "./paths.ts";
 import type { ActiveRunPointer, RunManifest, RunState, StepRecord } from "./types.ts";
 
@@ -58,6 +59,106 @@ export async function loadActiveRun(cwd: string): Promise<RunManifest | null> {
   } catch {
     return null;
   }
+}
+
+export const TERMINAL_HISTORY_DEFAULT_LIMIT = 10;
+export const TERMINAL_HISTORY_HARD_CAP = 20;
+export const TERMINAL_HISTORY_MAX_SCAN = 200;
+
+export interface TerminalRunHistoryResult {
+  runs: RunManifest[];
+  skippedCount: number;
+}
+
+function isCompleteManifest(value: unknown): value is RunManifest {
+  if (!value || typeof value !== "object") return false;
+
+  const manifest = value as Partial<RunManifest>;
+  return (
+    typeof manifest.id === "string" &&
+    typeof manifest.state === "string" &&
+    typeof manifest.workflowName === "string" &&
+    typeof manifest.updatedAt === "string" &&
+    typeof manifest.createdAt === "string" &&
+    typeof manifest.iteration === "number" &&
+    (manifest.lastStep === null || typeof manifest.lastStep === "string")
+  );
+}
+
+function runIdTimestamp(runId: string): string {
+  const prefix = runId.slice(0, 14);
+  return /^\d{14}$/.test(prefix) ? prefix : "";
+}
+
+function compareRunIdsNewestFirst(a: string, b: string): number {
+  const aTimestamp = runIdTimestamp(a);
+  const bTimestamp = runIdTimestamp(b);
+  if (aTimestamp && bTimestamp && aTimestamp !== bTimestamp) {
+    return bTimestamp.localeCompare(aTimestamp);
+  }
+
+  return b.localeCompare(a);
+}
+
+function compareRunsNewestFirst(a: RunManifest, b: RunManifest): number {
+  const updatedCompare = b.updatedAt.localeCompare(a.updatedAt);
+  if (updatedCompare !== 0) return updatedCompare;
+
+  const createdCompare = b.createdAt.localeCompare(a.createdAt);
+  if (createdCompare !== 0) return createdCompare;
+
+  return compareRunIdsNewestFirst(a.id, b.id);
+}
+
+export async function loadTerminalRunHistory(
+  cwd: string,
+  options: { limit?: number } = {},
+): Promise<TerminalRunHistoryResult> {
+  await ensureBatonScaffolding(cwd);
+
+  const limit = Math.min(
+    Math.max(1, options.limit ?? TERMINAL_HISTORY_DEFAULT_LIMIT),
+    TERMINAL_HISTORY_HARD_CAP,
+  );
+
+  let entries;
+  try {
+    entries = await readdir(getRunsDir(cwd), { withFileTypes: true });
+  } catch {
+    return { runs: [], skippedCount: 0 };
+  }
+
+  const runIds = entries
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => entry.name)
+    .sort(compareRunIdsNewestFirst)
+    .slice(0, TERMINAL_HISTORY_MAX_SCAN);
+
+  const terminalRuns: RunManifest[] = [];
+  let skippedCount = 0;
+
+  for (const runId of runIds) {
+    try {
+      const manifest = await readJson<unknown>(getRunManifestPath(cwd, runId));
+      if (!isCompleteManifest(manifest)) {
+        skippedCount++;
+        continue;
+      }
+      if (!isTerminalRunState(manifest.state)) {
+        continue;
+      }
+      terminalRuns.push(manifest);
+    } catch {
+      skippedCount++;
+    }
+  }
+
+  terminalRuns.sort(compareRunsNewestFirst);
+
+  return {
+    runs: terminalRuns.slice(0, limit),
+    skippedCount,
+  };
 }
 
 export async function loadMostRecentTerminalRun(cwd: string): Promise<RunManifest | null> {
