@@ -4,7 +4,8 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
 
-const { loadTerminalRunHistory, createIdleRun, updateRunState } = await import("../lib/run-store.ts");
+const { loadTerminalRunHistory, createIdleRun, updateRunState, TERMINAL_HISTORY_MAX_SCAN } =
+  await import("../lib/run-store.ts");
 const { formatHistorySummary, NO_TERMINAL_HISTORY_MESSAGE } = await import("../lib/status.ts");
 const { getPackageWorkflowsDir, getRunManifestPath } = await import("../lib/paths.ts");
 const { default: registerBaton } = await import("../extensions/index.ts");
@@ -110,6 +111,37 @@ test("loadTerminalRunHistory sorts multiple terminal runs newest first", async (
     assert.equal(history.runs.length, 2);
     assert.equal(history.runs[0].id, "20260620000000-newer0002");
     assert.equal(history.runs[1].id, "20260618000000-older0001");
+  } finally {
+    await rm(cwd, { recursive: true, force: true });
+  }
+});
+
+test("loadTerminalRunHistory keeps the newest run when the scan cap is exceeded", async () => {
+  const cwd = await mkdtemp(join(tmpdir(), "pi-baton-history-scan-cap-"));
+
+  try {
+    const runsDir = join(cwd, ".pi", "baton", "runs");
+    await mkdir(runsDir, { recursive: true });
+
+    for (let index = 0; index < TERMINAL_HISTORY_MAX_SCAN; index += 1) {
+      const suffix = String(index).padStart(4, "0");
+      await mkdir(join(runsDir, `20200101000000-pad${suffix}`), { recursive: true });
+    }
+
+    await writeManifest(
+      cwd,
+      baseManifest({
+        id: "20260901000000-newest01",
+        createdAt: "2026-09-01T10:00:00.000Z",
+        updatedAt: "2026-09-01T12:00:00.000Z",
+      }),
+    );
+
+    const history = await loadTerminalRunHistory(cwd);
+    assert.deepEqual(
+      history.runs.map((run) => run.id),
+      ["20260901000000-newest01"],
+    );
   } finally {
     await rm(cwd, { recursive: true, force: true });
   }

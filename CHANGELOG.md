@@ -10,7 +10,7 @@ This project follows semantic versioning.
 
 ### Added
 
-- `/baton:history` lists recent completed or failed Baton runs from persisted `.pi/baton/runs/` manifests, with bounded scan/output limits, skip diagnostics for unreadable manifests, and tests for empty, single, multi-run, exclusion, and command registration cases.
+- `/baton:history` lists recent completed or failed Baton runs from persisted `.pi/baton/runs/` manifests, with bounded scan/output limits, skip diagnostics for unreadable manifests, and tests for empty, single, multi-run, exclusion, scan-cap ordering, and command registration cases.
 - `/baton:status` and `formatStatusSummary` now include the stored `failure` reason for terminal failed runs, with status tests covering iteration-cap exhaustion and other failure paths.
 
 ### Changed

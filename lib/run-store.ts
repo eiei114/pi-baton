@@ -90,6 +90,16 @@ function runIdTimestamp(runId: string): string {
   return /^\d{14}$/.test(prefix) ? prefix : "";
 }
 
+function compareRunIdsNewestFirst(a: string, b: string): number {
+  const aTimestamp = runIdTimestamp(a);
+  const bTimestamp = runIdTimestamp(b);
+  if (aTimestamp && bTimestamp && aTimestamp !== bTimestamp) {
+    return bTimestamp.localeCompare(aTimestamp);
+  }
+
+  return b.localeCompare(a);
+}
+
 function compareRunsNewestFirst(a: RunManifest, b: RunManifest): number {
   const updatedCompare = b.updatedAt.localeCompare(a.updatedAt);
   if (updatedCompare !== 0) return updatedCompare;
@@ -97,14 +107,7 @@ function compareRunsNewestFirst(a: RunManifest, b: RunManifest): number {
   const createdCompare = b.createdAt.localeCompare(a.createdAt);
   if (createdCompare !== 0) return createdCompare;
 
-  const aTimestamp = runIdTimestamp(a.id);
-  const bTimestamp = runIdTimestamp(b.id);
-  if (aTimestamp && bTimestamp) {
-    const timestampCompare = bTimestamp.localeCompare(aTimestamp);
-    if (timestampCompare !== 0) return timestampCompare;
-  }
-
-  return b.id.localeCompare(a.id);
+  return compareRunIdsNewestFirst(a.id, b.id);
 }
 
 export async function loadTerminalRunHistory(
@@ -128,6 +131,7 @@ export async function loadTerminalRunHistory(
   const runIds = entries
     .filter((entry) => entry.isDirectory())
     .map((entry) => entry.name)
+    .sort(compareRunIdsNewestFirst)
     .slice(0, TERMINAL_HISTORY_MAX_SCAN);
 
   const terminalRuns: RunManifest[] = [];

@@ -78,7 +78,7 @@ Then run:
 /baton:history    list recent completed or failed runs from persisted history
 ```
 
-Use `/baton:status` for the active run or the single most recent finished run. Use `/baton:history` when you need a short list of older completed or failed runs and their `.pi/baton/runs/<id>` directories.
+Use `/baton:status` for the active run or the single most recent finished run. Use `/baton:history` when you need a short list of recent completed or failed runs and their `.pi/baton/runs/<id>` directories.
 
 Builtin workflows work out of the box — no agent setup required:
 
