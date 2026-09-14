@@ -4,8 +4,8 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
 
-const { runContinuous } = await import("../lib/run-engine.ts");
-const { createIdleRun, loadActiveRun, readRunManifest } = await import("../lib/run-store.ts");
+const { formatRunResultSummary, runContinuous } = await import("../lib/run-engine.ts");
+const { createIdleRun, loadActiveRun, readRunManifest, updateRunState } = await import("../lib/run-store.ts");
 const { getPackageWorkflowsDir, getRunOutputsDir, getRunStepsDir } = await import("../lib/paths.ts");
 
 function reviewOutput(judgment, extra = {}) {
@@ -293,6 +293,55 @@ test("runContinuous persists structured step envelopes for all steps", async () 
 
     assert.equal(review?.envelope.judgment, "accept");
     assert.equal(review?.envelope.acceptanceNote, "approved");
+  } finally {
+    await rm(cwd, { recursive: true, force: true });
+  }
+});
+
+test("runContinuous fails at iteration cap before executing review when iteration is exhausted", async () => {
+  const cwd = await mkdtemp(join(tmpdir(), "pi-baton-run-cap-pre-check-"));
+  let reviewAttempts = 0;
+
+  try {
+    const manifest = await createIdleRun(cwd, {
+      workflowId: "default-review-loop",
+      workflowName: "Default Review Loop",
+      workflowPath: join(getPackageWorkflowsDir(), "default-review-loop.yaml"),
+      workflowSource: "builtin",
+      taskBrief: "Pre-check cap test",
+      targetDirectory: cwd,
+      entryStep: "implement",
+      iterationCap: 2,
+    });
+
+    await updateRunState(cwd, manifest.id, {
+      state: "running",
+      currentStep: "review",
+      lastStep: "fix",
+      iteration: 2,
+    });
+
+    const summary = await runContinuous({
+      cwd,
+      runId: manifest.id,
+      stepRunner: async (request) => {
+        if (request.agent === "worker") {
+          return { exitCode: 0, outputText: workerOutput("work"), stderr: "" };
+        }
+
+        reviewAttempts += 1;
+        return { exitCode: 0, outputText: reviewOutput("reject"), stderr: "" };
+      },
+    });
+
+    assert.equal(summary.state, "failed");
+    assert.equal(reviewAttempts, 0);
+    assert.match(summary.failureReason ?? "", /Iteration cap \(2\) reached/);
+    assert.match(formatRunResultSummary(summary), /failure: Iteration cap \(2\) reached/);
+
+    const finalManifest = await readRunManifest(cwd, manifest.id);
+    assert.equal(finalManifest.state, "failed");
+    assert.match(finalManifest.failureReason ?? "", /Iteration cap \(2\) reached/);
   } finally {
     await rm(cwd, { recursive: true, force: true });
   }
