@@ -1,11 +1,11 @@
 import assert from "node:assert/strict";
-import { access, mkdtemp, readFile, rm } from "node:fs/promises";
+import { access, mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
 
 const { default: registerBaton } = await import("../extensions/index.ts");
-const { createIdleRun, loadActiveRun } = await import("../lib/run-store.ts");
+const { createIdleRun, loadActiveRun, updateRunState } = await import("../lib/run-store.ts");
 const { getPackageWorkflowsDir } = await import("../lib/paths.ts");
 const { NO_ACTIVE_RUN_MESSAGE } = await import("../lib/status.ts");
 
@@ -210,6 +210,61 @@ test("baton:status reports active idle run summary", async () => {
     assert.match(summary?.message ?? "", /workflow: Default Review Loop/);
     assert.match(summary?.message ?? "", /task brief: Status command test/);
     assert.match(summary?.message ?? "", /run state: idle/);
+  } finally {
+    await rm(cwd, { recursive: true, force: true });
+  }
+});
+
+test("baton:status falls back to terminal failed run with iteration-cap reason", async () => {
+  const cwd = await mkdtemp(join(tmpdir(), "pi-baton-cmd-status-failed-cap-"));
+  const ui = createMockUi();
+
+  try {
+    const manifest = await createIdleRun(cwd, {
+      workflowId: "default-review-loop",
+      workflowName: "Default Review Loop",
+      workflowPath: join(getPackageWorkflowsDir(), "default-review-loop.yaml"),
+      workflowSource: "builtin",
+      taskBrief: "Status failed cap test",
+      targetDirectory: cwd,
+      entryStep: "implement",
+      iterationCap: 2,
+    });
+
+    await updateRunState(cwd, manifest.id, {
+      state: "failed",
+      currentStep: "review",
+      lastStep: "fix",
+      iteration: 2,
+      failureReason: "Iteration cap (2) reached",
+    });
+
+    await handlers.get("baton:status")(undefined, createCtx(cwd, ui));
+
+    const summary = ui.notifications.find((entry) => entry.level === "info");
+    assert.match(summary?.message ?? "", /This Baton run has finished \(failed\)\./);
+    assert.match(summary?.message ?? "", /failure: Iteration cap \(2\) reached/);
+    assert.match(summary?.message ?? "", /task brief: Status failed cap test/);
+  } finally {
+    await rm(cwd, { recursive: true, force: true });
+  }
+});
+
+test("baton:status shows no-active-run message when pointer manifest is unreadable", async () => {
+  const cwd = await mkdtemp(join(tmpdir(), "pi-baton-cmd-status-corrupt-"));
+  const ui = createMockUi();
+  const runId = "20260623000000-corrupt04";
+
+  try {
+    const runDir = join(cwd, ".pi", "baton", "runs", runId);
+    await mkdir(runDir, { recursive: true });
+    await writeFile(join(runDir, "run.json"), "{not-json", "utf8");
+    await writeFile(join(cwd, ".pi", "baton", "active-run.json"), `${JSON.stringify({ runId })}\n`, "utf8");
+
+    await handlers.get("baton:status")(undefined, createCtx(cwd, ui));
+
+    const message = ui.notifications.find((entry) => entry.message === NO_ACTIVE_RUN_MESSAGE);
+    assert.ok(message);
   } finally {
     await rm(cwd, { recursive: true, force: true });
   }

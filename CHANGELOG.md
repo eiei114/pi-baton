@@ -6,6 +6,10 @@ This project follows semantic versioning.
 
 ## [Unreleased]
 
+### Added
+
+- Regression tests for exhausted `iteration_cap` pre-check behavior in `runContinuous`, malformed unreadable active-run manifests in `loadActiveRun`/`loadMostRecentTerminalRun`, recovery via `createIdleRun`, and `/baton:status` terminal-fallback messaging for iteration-cap failures.
+
 ## [0.8.0] - 2026-09-14
 
 ### Added
