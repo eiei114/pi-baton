@@ -66,6 +66,33 @@ test("discoverWorkflowItems fails validation for invalid user workflow YAML", as
   }
 });
 
+test("loadWorkflowById loads a builtin workflow without scanning unrelated user YAML", async () => {
+  const cwd = await mkdtemp(join(tmpdir(), "pi-baton-discovery-direct-"));
+  const workflowsDir = join(cwd, ".pi", "baton", "workflows");
+
+  try {
+    await mkdir(workflowsDir, { recursive: true });
+    await writeFile(join(workflowsDir, "broken.yaml"), "name: Broken\nsteps: {}\n", "utf8");
+
+    const workflow = await loadWorkflowById(cwd, "default-review-loop");
+    assert.equal(workflow.id, "default-review-loop");
+    assert.equal(workflow.source, "builtin");
+    assert.equal(workflow.entryStep, "implement");
+  } finally {
+    await rm(cwd, { recursive: true, force: true });
+  }
+});
+
+test("loadWorkflowById rejects unknown workflow ids", async () => {
+  const cwd = await mkdtemp(join(tmpdir(), "pi-baton-discovery-unknown-"));
+
+  try {
+    await assert.rejects(() => loadWorkflowById(cwd, "missing-workflow"), /Unknown workflow: missing-workflow/);
+  } finally {
+    await rm(cwd, { recursive: true, force: true });
+  }
+});
+
 test("discoverWorkflowItems lists user-defined workflows before builtin", async () => {
   const cwd = await mkdtemp(join(tmpdir(), "pi-baton-discovery-"));
   const workflowsDir = join(cwd, ".pi", "baton", "workflows");
