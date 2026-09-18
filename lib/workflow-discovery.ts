@@ -47,7 +47,24 @@ function isMissingFileError(error: unknown): boolean {
   );
 }
 
+const UNSAFE_WORKFLOW_ID_PATTERN = /[\\/\0]/;
+
+function isSafeWorkflowId(workflowId: string): boolean {
+  return (
+    workflowId.length > 0 &&
+    workflowId !== "." &&
+    workflowId !== ".." &&
+    !UNSAFE_WORKFLOW_ID_PATTERN.test(workflowId)
+  );
+}
+
 export async function loadWorkflowById(cwd: string, workflowId: string): Promise<WorkflowDefinition> {
+  // The direct lookup builds a path from the id, so ids that could escape the
+  // workflow directories are rejected before any read is attempted.
+  if (!isSafeWorkflowId(workflowId)) {
+    throw new Error(`Unknown workflow: ${workflowId}`);
+  }
+
   const userPath = join(getWorkflowsDir(cwd), `${workflowId}.yaml`);
   try {
     const yamlText = await readFile(userPath, "utf8");

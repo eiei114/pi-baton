@@ -93,6 +93,24 @@ test("loadWorkflowById rejects unknown workflow ids", async () => {
   }
 });
 
+test("loadWorkflowById rejects workflow ids that escape the workflow directories", async () => {
+  const root = await mkdtemp(join(tmpdir(), "pi-baton-discovery-traversal-"));
+  const cwd = join(root, "cwd");
+  const workflowsDir = join(cwd, ".pi", "baton", "workflows");
+
+  try {
+    await mkdir(workflowsDir, { recursive: true });
+    // A valid workflow one level above the workflow directory must stay unreachable by id.
+    await writeFile(join(cwd, ".pi", "baton", "escaped.yaml"), userWorkflow, "utf8");
+
+    await assert.rejects(() => loadWorkflowById(cwd, "../escaped"), /Unknown workflow: \.\.\/escaped/);
+    await assert.rejects(() => loadWorkflowById(cwd, "..\\escaped"), /Unknown workflow/);
+    await assert.rejects(() => loadWorkflowById(cwd, ".."), /Unknown workflow/);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
 test("discoverWorkflowItems lists user-defined workflows before builtin", async () => {
   const cwd = await mkdtemp(join(tmpdir(), "pi-baton-discovery-"));
   const workflowsDir = join(cwd, ".pi", "baton", "workflows");
