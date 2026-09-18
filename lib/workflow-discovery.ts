@@ -38,19 +38,54 @@ export async function discoverWorkflowItems(cwd: string): Promise<WorkflowListIt
   return [...userItems, ...builtinItems];
 }
 
+function isMissingFileError(error: unknown): boolean {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    (error as NodeJS.ErrnoException).code === "ENOENT"
+  );
+}
+
+const UNSAFE_WORKFLOW_ID_PATTERN = /[\\/\0]/;
+
+function isSafeWorkflowId(workflowId: string): boolean {
+  return (
+    workflowId.length > 0 &&
+    workflowId !== "." &&
+    workflowId !== ".." &&
+    !UNSAFE_WORKFLOW_ID_PATTERN.test(workflowId)
+  );
+}
+
 export async function loadWorkflowById(cwd: string, workflowId: string): Promise<WorkflowDefinition> {
-  const items = await discoverWorkflowItems(cwd);
-  const match = items.find((item) => item.id === workflowId);
-  if (!match) {
+  // The direct lookup builds a path from the id, so ids that could escape the
+  // workflow directories are rejected before any read is attempted.
+  if (!isSafeWorkflowId(workflowId)) {
     throw new Error(`Unknown workflow: ${workflowId}`);
   }
 
-  const yamlText = await readFile(match.path, "utf8");
-  return parseWorkflowDocument(yamlText, {
-    id: match.id,
-    source: match.source,
-    path: match.path,
-  });
+  const userPath = join(getWorkflowsDir(cwd), `${workflowId}.yaml`);
+  try {
+    const yamlText = await readFile(userPath, "utf8");
+    return parseWorkflowDocument(yamlText, { id: workflowId, source: "user", path: userPath });
+  } catch (error) {
+    if (!isMissingFileError(error)) {
+      throw error;
+    }
+  }
+
+  const builtinPath = join(getPackageWorkflowsDir(), `${workflowId}.yaml`);
+  try {
+    const yamlText = await readFile(builtinPath, "utf8");
+    return parseWorkflowDocument(yamlText, { id: workflowId, source: "builtin", path: builtinPath });
+  } catch (error) {
+    if (!isMissingFileError(error)) {
+      throw error;
+    }
+  }
+
+  throw new Error(`Unknown workflow: ${workflowId}`);
 }
 
 export async function loadWorkflowFromPath(

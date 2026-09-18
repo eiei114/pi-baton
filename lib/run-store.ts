@@ -134,22 +134,33 @@ export async function loadTerminalRunHistory(
     .sort(compareRunIdsNewestFirst)
     .slice(0, TERMINAL_HISTORY_MAX_SCAN);
 
+  const scanResults = await Promise.all(
+    runIds.map(async (runId) => {
+      try {
+        const manifest = await readJson<unknown>(getRunManifestPath(cwd, runId));
+        if (!isCompleteManifest(manifest)) {
+          return { kind: "skipped" as const };
+        }
+        if (!isTerminalRunState(manifest.state)) {
+          return { kind: "non-terminal" as const };
+        }
+        return { kind: "terminal" as const, manifest };
+      } catch {
+        return { kind: "skipped" as const };
+      }
+    }),
+  );
+
   const terminalRuns: RunManifest[] = [];
   let skippedCount = 0;
 
-  for (const runId of runIds) {
-    try {
-      const manifest = await readJson<unknown>(getRunManifestPath(cwd, runId));
-      if (!isCompleteManifest(manifest)) {
-        skippedCount++;
-        continue;
-      }
-      if (!isTerminalRunState(manifest.state)) {
-        continue;
-      }
-      terminalRuns.push(manifest);
-    } catch {
+  for (const result of scanResults) {
+    if (result.kind === "skipped") {
       skippedCount++;
+      continue;
+    }
+    if (result.kind === "terminal") {
+      terminalRuns.push(result.manifest);
     }
   }
 
