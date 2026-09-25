@@ -15,25 +15,30 @@ async function listYamlFiles(dir: string): Promise<string[]> {
   }
 }
 
+async function loadWorkflowItems(
+  filePaths: string[],
+  source: "user" | "builtin",
+): Promise<WorkflowListItem[]> {
+  return Promise.all(
+    filePaths.map(async (filePath) => {
+      const yamlText = await readFile(filePath, "utf8");
+      const id = basename(filePath, ".yaml");
+      const workflow = parseWorkflowDocument(yamlText, { id, source, path: filePath });
+      return { id, name: workflow.name, source, path: filePath };
+    }),
+  );
+}
+
 export async function discoverWorkflowItems(cwd: string): Promise<WorkflowListItem[]> {
-  const userFiles = await listYamlFiles(getWorkflowsDir(cwd));
-  const builtinFiles = await listYamlFiles(getPackageWorkflowsDir());
+  const [userFiles, builtinFiles] = await Promise.all([
+    listYamlFiles(getWorkflowsDir(cwd)),
+    listYamlFiles(getPackageWorkflowsDir()),
+  ]);
 
-  const userItems: WorkflowListItem[] = [];
-  for (const filePath of userFiles) {
-    const yamlText = await readFile(filePath, "utf8");
-    const id = basename(filePath, ".yaml");
-    const workflow = parseWorkflowDocument(yamlText, { id, source: "user", path: filePath });
-    userItems.push({ id, name: workflow.name, source: "user", path: filePath });
-  }
-
-  const builtinItems: WorkflowListItem[] = [];
-  for (const filePath of builtinFiles) {
-    const yamlText = await readFile(filePath, "utf8");
-    const id = basename(filePath, ".yaml");
-    const workflow = parseWorkflowDocument(yamlText, { id, source: "builtin", path: filePath });
-    builtinItems.push({ id, name: workflow.name, source: "builtin", path: filePath });
-  }
+  const [userItems, builtinItems] = await Promise.all([
+    loadWorkflowItems(userFiles, "user"),
+    loadWorkflowItems(builtinFiles, "builtin"),
+  ]);
 
   return [...userItems, ...builtinItems];
 }
