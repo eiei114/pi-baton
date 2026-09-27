@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.8.1 - 2026-09-27
+
+- chore: periodic patch bump after 7+ days without npm publish
+
 All notable changes to this project will be documented in this file.
 
 This project follows semantic versioning.
