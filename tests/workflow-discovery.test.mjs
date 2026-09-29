@@ -83,6 +83,23 @@ test("loadWorkflowById loads a builtin workflow without scanning unrelated user 
   }
 });
 
+test("loadWorkflowById prefers a user workflow over a builtin with the same id", async () => {
+  const cwd = await mkdtemp(join(tmpdir(), "pi-baton-discovery-precedence-"));
+  const workflowsDir = join(cwd, ".pi", "baton", "workflows");
+
+  try {
+    await mkdir(workflowsDir, { recursive: true });
+    await writeFile(join(workflowsDir, "default-review-loop.yaml"), userWorkflow, "utf8");
+
+    const workflow = await loadWorkflowById(cwd, "default-review-loop");
+    assert.equal(workflow.name, "User First");
+    assert.equal(workflow.source, "user");
+    assert.equal(workflow.path, join(workflowsDir, "default-review-loop.yaml"));
+  } finally {
+    await rm(cwd, { recursive: true, force: true });
+  }
+});
+
 test("loadWorkflowById rejects unknown workflow ids", async () => {
   const cwd = await mkdtemp(join(tmpdir(), "pi-baton-discovery-unknown-"));
 
