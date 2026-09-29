@@ -52,6 +52,14 @@ function isMissingFileError(error: unknown): boolean {
   );
 }
 
+async function loadWorkflowFile(
+  filePath: string,
+  options: { id: string; source: "user" | "builtin" },
+): Promise<WorkflowDefinition> {
+  const yamlText = await readFile(filePath, "utf8");
+  return parseWorkflowDocument(yamlText, { ...options, path: filePath });
+}
+
 const UNSAFE_WORKFLOW_ID_PATTERN = /[\\/\0]/;
 
 function isSafeWorkflowId(workflowId: string): boolean {
@@ -70,23 +78,18 @@ export async function loadWorkflowById(cwd: string, workflowId: string): Promise
     throw new Error(`Unknown workflow: ${workflowId}`);
   }
 
-  const userPath = join(getWorkflowsDir(cwd), `${workflowId}.yaml`);
-  try {
-    const yamlText = await readFile(userPath, "utf8");
-    return parseWorkflowDocument(yamlText, { id: workflowId, source: "user", path: userPath });
-  } catch (error) {
-    if (!isMissingFileError(error)) {
-      throw error;
-    }
-  }
+  const candidates = [
+    { path: join(getWorkflowsDir(cwd), `${workflowId}.yaml`), source: "user" as const },
+    { path: join(getPackageWorkflowsDir(), `${workflowId}.yaml`), source: "builtin" as const },
+  ];
 
-  const builtinPath = join(getPackageWorkflowsDir(), `${workflowId}.yaml`);
-  try {
-    const yamlText = await readFile(builtinPath, "utf8");
-    return parseWorkflowDocument(yamlText, { id: workflowId, source: "builtin", path: builtinPath });
-  } catch (error) {
-    if (!isMissingFileError(error)) {
-      throw error;
+  for (const candidate of candidates) {
+    try {
+      return await loadWorkflowFile(candidate.path, { id: workflowId, source: candidate.source });
+    } catch (error) {
+      if (!isMissingFileError(error)) {
+        throw error;
+      }
     }
   }
 
@@ -97,6 +100,5 @@ export async function loadWorkflowFromPath(
   filePath: string,
   options: { id: string; source: "user" | "builtin" },
 ): Promise<WorkflowDefinition> {
-  const yamlText = await readFile(filePath, "utf8");
-  return parseWorkflowDocument(yamlText, { ...options, path: filePath });
+  return loadWorkflowFile(filePath, options);
 }
