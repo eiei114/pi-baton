@@ -165,6 +165,46 @@ test("baton:start rejects empty task brief inline", async () => {
     await handlers.get("baton:start")(undefined, createCtx(cwd, ui));
     const warning = ui.notifications.find((entry) => entry.message === "Task brief is required.");
     assert.ok(warning);
+
+    const malformedCwd = await mkdtemp(join(tmpdir(), "pi-baton-cmd-malformed-workflow-"));
+    const malformedUi = createMockUi();
+    try {
+      const workflowsDir = join(malformedCwd, ".pi", "baton", "workflows");
+      await mkdir(workflowsDir, { recursive: true });
+      await writeFile(join(workflowsDir, "broken.yaml"), "name: [", "utf8");
+
+      await handlers.get("baton:start")(undefined, createCtx(malformedCwd, malformedUi));
+
+      const error = malformedUi.notifications.find((entry) => entry.level === "error");
+      assert.match(error?.message ?? "", /^Workflow validation failed: Invalid YAML:/);
+    } finally {
+      await rm(malformedCwd, { recursive: true, force: true });
+    }
+
+    const missingFieldCwd = await mkdtemp(join(tmpdir(), "pi-baton-cmd-missing-workflow-field-"));
+    const missingFieldUi = createMockUi();
+    try {
+      const workflowsDir = join(missingFieldCwd, ".pi", "baton", "workflows");
+      await mkdir(workflowsDir, { recursive: true });
+      await writeFile(
+        join(workflowsDir, "missing-cap.yaml"),
+        `name: Missing Cap
+steps:
+  implement:
+    agent: worker
+    prompt: do work
+    next: implement
+`,
+        "utf8",
+      );
+
+      await handlers.get("baton:start")(undefined, createCtx(missingFieldCwd, missingFieldUi));
+
+      const error = missingFieldUi.notifications.find((entry) => entry.level === "error");
+      assert.equal(error?.message, "Workflow validation failed: iteration_cap is required");
+    } finally {
+      await rm(missingFieldCwd, { recursive: true, force: true });
+    }
   } finally {
     await rm(cwd, { recursive: true, force: true });
   }
