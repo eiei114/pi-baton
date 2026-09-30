@@ -39,7 +39,7 @@ pi install npm:pi-baton
 Pin a specific version when you want reproducible installs:
 
 ```bash
-pi install npm:pi-baton@0.8.5
+pi install npm:pi-baton@0.8.6
 ```
 
 Install into the current project instead of your user Pi settings:
