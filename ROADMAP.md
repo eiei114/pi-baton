@@ -9,7 +9,7 @@
 
 | Field | Value |
 |---|---|
-| Latest release | **0.8.5** |
+| Latest release | **0.8.6** |
 | Next planned | **0.8.1** — dependabot hygiene + engine edge-case coverage |
 | Stability | Early / pre-1.0; surface (`/baton:*` commands + YAML schema) is stabilizing |
 | CI | `npm run ci` green (typecheck + 92 tests + `npm pack --dry-run`) |
