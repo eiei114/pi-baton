@@ -10,7 +10,7 @@
 | Field | Value |
 |---|---|
 | Latest release | **0.8.6** |
-| Next planned | **0.8.1** — dependabot hygiene + engine edge-case coverage |
+| Next planned | **0.9.0** — dependency hygiene, abort coverage, and lifecycle UX polish |
 | Stability | Early / pre-1.0; surface (`/baton:*` commands + YAML schema) is stabilizing |
 | CI | `npm run ci` green (typecheck + 92 tests + `npm pack --dry-run`) |
 | Security | `npm audit` reports 0 vulnerabilities |
@@ -48,6 +48,22 @@ findings/acceptance notes), persisting step records + raw outputs, and updating 
 state until `on_accept: _complete` or `iteration_cap` is hit. Terminal runs free the
 active-run guard so a new run can start.
 
+## Roadmap review — 2026-W41
+
+The roadmap source is present and has been refreshed against the current `main` branch
+(release `0.8.6`). The next bounded maintenance candidates are:
+
+1. **S-111 — Triage the Dependabot npm-dev-minor-patch batch**: review PR #49 and
+   merge or close it with a rationale; this is the highest-priority dependency-hygiene
+   item and may require human approval.
+2. **S-112 — Add subagent abort propagation coverage**: exercise cancellation of an
+   in-flight step without changing production behavior unless the test exposes a bug.
+3. **S-114 — Improve unresolved step-model errors**: make placeholder failures name the
+   step, agent, and unresolved model so custom workflow authors can act on them.
+
+These candidates are already recorded in the maintenance backlog below; no
+implementation or release action is part of this roadmap refresh.
+
 ## Near-term direction (next 2–3 releases)
 
 ### 0.5.0 → 0.7.0 — Shipped
@@ -56,7 +72,7 @@ active-run guard so a new run can start.
 - 0.6.0: Structured step envelopes, handoff payloads, review contract enforcement, model routing.
 - 0.7.0: Full command surface tests, README alignment.
 
-### 0.8.0 — Engine hardening + hygiene (current focus)
+### 0.8.0 — Engine hardening + hygiene (completed focus)
 
 Template cleanup and authoring docs are done; remaining seeds target thinner test
 coverage and dependency freshness:
