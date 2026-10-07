@@ -24,13 +24,13 @@ function getPiInvocation(args: string[]): { command: string; args: string[] } {
 }
 
 function getFinalOutput(messages: Message[]): string {
-  const assistantTexts = messages
-    .filter((message): message is Extract<Message, { role: "assistant" }> => message.role === "assistant")
-    .flatMap((message) =>
-      message.content
-        .filter((block): block is { type: "text"; text: string } => block.type === "text")
-        .map((block) => block.text),
-    );
+  const assistantTexts: string[] = [];
+  for (const message of messages) {
+    if (message.role !== "assistant") continue;
+    for (const block of message.content) {
+      if (block.type === "text") assistantTexts.push(block.text);
+    }
+  }
 
   return assistantTexts.join("\n").trim();
 }
