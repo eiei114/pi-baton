@@ -39,7 +39,7 @@ pi install npm:pi-baton
 Pin a specific version when you want reproducible installs:
 
 ```bash
-pi install npm:pi-baton@0.8.6
+pi install npm:pi-baton@0.8.7
 ```
 
 Install into the current project instead of your user Pi settings:
@@ -160,12 +160,7 @@ npm run ci
 
 This package uses npm Trusted Publishing with GitHub Actions OIDC — no `NPM_TOKEN` is required.
 
-```bash
-npm version patch
-git push
-```
-
-On `main`, version bumps trigger auto-release and publish workflows. See [`docs/release.md`](docs/release.md) for setup details.
+Package-version changes merged to `main` do not trigger a release. A maintainer explicitly dispatches the release workflow when a release is authorized. See [`docs/release.md`](docs/release.md) for setup details.
 
 ## Security
 

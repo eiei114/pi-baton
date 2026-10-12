@@ -1,10 +1,7 @@
-name: Auto Release
+name: Release (manual)
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - package.json
+  workflow_dispatch:
 
 permissions:
   actions: write
@@ -12,6 +9,7 @@ permissions:
 
 jobs:
   release:
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
     name: Create release for new version
     runs-on: ubuntu-latest
     steps:
@@ -25,6 +23,9 @@ jobs:
         shell: bash
         run: |
           BEFORE="${{ github.event.before }}"
+          if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then
+            BEFORE="$(git rev-parse HEAD^)"
+          fi
           CURRENT_VERSION=$(node -p "require('./package.json').version")
           TAG="v${CURRENT_VERSION}"
 

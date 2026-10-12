@@ -1,6 +1,6 @@
 {
   "name": "pi-baton",
-  "version": "0.8.6",
+  "version": "0.8.7",
   "description": "Pi-native workflow baton runner with per-step model switching and isolated step context.",
   "type": "module",
   "engines": {
@@ -38,8 +38,9 @@
   "scripts": {
     "typecheck": "tsc --noEmit",
     "test": "node --test tests/*.test.mjs",
-    "ci": "npm run typecheck && npm test && npm run pack:check",
-    "pack:check": "npm pack --dry-run"
+    "ci": "npm run typecheck && npm test && npm run smoke:pi && npm run pack:check",
+    "pack:check": "npm pack --dry-run",
+    "smoke:pi": "node scripts/pi-sdk-smoke.mjs"
   },
   "pi": {
     "extensions": [
@@ -58,8 +59,10 @@
     "typebox": "*"
   },
   "devDependencies": {
-    "@earendil-works/pi-ai": "^0.99.1",
-    "@earendil-works/pi-coding-agent": "^0.99.1",
+    "@earendil-works/pi-agent-core": "1.1.0",
+    "@earendil-works/pi-ai": "1.1.0",
+    "@earendil-works/pi-coding-agent": "1.1.0",
+    "@earendil-works/pi-tui": "1.1.0",
     "typebox": "latest",
     "@types/node": "^26.0.1",
     "typescript": "^7.0.2"
