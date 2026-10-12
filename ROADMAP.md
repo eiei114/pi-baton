@@ -12,7 +12,7 @@
 | Latest release | **0.8.6** |
 | Next planned | **0.9.0** — dependency hygiene, abort coverage, and lifecycle UX polish |
 | Stability | Early / pre-1.0; surface (`/baton:*` commands + YAML schema) is stabilizing |
-| CI | `npm run ci` green (typecheck + 92 tests + `npm pack --dry-run`) |
+| CI | `npm run ci` green (typecheck + 104 tests + `npm pack --dry-run`) |
 | Security | `npm audit` reports 0 vulnerabilities |
 | npm publishing | npm Trusted Publishing (OIDC), no `NPM_TOKEN` |
 
@@ -31,11 +31,11 @@ contract, and a live progress widget.
 
 | Path | Role |
 |---|---|
-| `extensions/index.ts` | 5 slash commands: `/baton:new`, `/baton:start`, `/baton:run`, `/baton:status`, `/baton:history` |
-| `lib/` | Workflow parser, schema validation, run engine, run store, subagent runner, review contract, model routing, UI widget, status formatter |
+| `extensions/index.ts` | 6 slash commands: `/baton:new`, `/baton:start`, `/baton:run`, `/baton:status`, `/baton:history`, `/baton:inspect` |
+| `lib/` | Workflow parser, schema validation, run engine, run store and inspection, subagent runner, review contract, model routing, UI widget, status formatter |
 | `agents/` | Builtin `worker` and `reviewer` subagent definitions |
 | `workflows/*.yaml` | Builtin workflows (default review loop and two-stage review gauntlet) |
-| `tests/*.test.mjs` | 92 tests (engine, store, schema, discovery, scaffold, widget, status, history, agents, commands, handoff, kebab-case, model-routing, review-contract, extension-registration, smoke) |
+| `tests/*.test.mjs` | 104 tests (engine, store, schema, discovery, scaffold, widget, status, history, inspection, agents, commands, handoff, kebab-case, model-routing, review-contract, extension-registration, smoke) |
 
 ### Architecture in one paragraph
 
@@ -396,7 +396,8 @@ errors reduce trial-and-error during `/baton:start` and `/baton:run`.
   transitions, single-active-run guard, terminal-run status) are covered; thinner areas
   include abort propagation in `subagent-runner` ([S-112](#s-112)).
 - **Run lifecycle beyond the active run.** Past runs are persisted under
-  `.pi/baton/runs/` and recent terminal runs are listed via `/baton:history`
+  `.pi/baton/runs/`, recent terminal runs are listed via `/baton:history`, and their
+  structured step summaries are available via `/baton:inspect`
   ([S-113](#s-113)). A future `/baton:cancel` would address active-run cancellation.
 - **Dependency freshness.** Keep the dependabot queue near-zero; pi-baton sits on top of
   fast-moving `@earendil-works/pi-*` packages and a major bump left to rot becomes a

@@ -70,7 +70,7 @@ export interface TerminalRunHistoryResult {
   skippedCount: number;
 }
 
-function isCompleteManifest(value: unknown): value is RunManifest {
+export function isCompleteRunManifest(value: unknown): value is RunManifest {
   if (!value || typeof value !== "object") return false;
 
   const manifest = value as Partial<RunManifest>;
@@ -112,9 +112,11 @@ function compareRunsNewestFirst(a: RunManifest, b: RunManifest): number {
 
 export async function loadTerminalRunHistory(
   cwd: string,
-  options: { limit?: number } = {},
+  options: { limit?: number; ensureDirectories?: boolean } = {},
 ): Promise<TerminalRunHistoryResult> {
-  await ensureBatonScaffolding(cwd);
+  if (options.ensureDirectories !== false) {
+    await ensureBatonScaffolding(cwd);
+  }
 
   const limit = Math.min(
     Math.max(1, options.limit ?? TERMINAL_HISTORY_DEFAULT_LIMIT),
@@ -138,7 +140,7 @@ export async function loadTerminalRunHistory(
     runIds.map(async (runId) => {
       try {
         const manifest = await readJson<unknown>(getRunManifestPath(cwd, runId));
-        if (!isCompleteManifest(manifest)) {
+        if (!isCompleteRunManifest(manifest)) {
           return { kind: "skipped" as const };
         }
         if (!isTerminalRunState(manifest.state)) {
