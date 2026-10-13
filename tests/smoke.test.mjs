@@ -63,6 +63,9 @@ test("release workflow stays behind explicit maintainer dispatch, not a main ver
   assert.match(autoReleaseWorkflow, /^on:\s*\n\s+workflow_dispatch:\s*$/m);
   assert.doesNotMatch(autoReleaseWorkflow, /^\s+push:/m);
   assert.match(autoReleaseWorkflow, /if: github\.event_name == 'workflow_dispatch' && github\.ref == 'refs\/heads\/main'/);
+  assert.match(autoReleaseWorkflow, /git tag --list 'v\[0-9\]\*' --sort=-version:refname/);
+  assert.match(autoReleaseWorkflow, /git show "\$\{PREVIOUS_TAG\}:package\.json"/);
+  assert.doesNotMatch(autoReleaseWorkflow, /git rev-parse HEAD\^/);
 });
 
 test("publish workflow avoids duplicate main push trigger for version bumps", () => {

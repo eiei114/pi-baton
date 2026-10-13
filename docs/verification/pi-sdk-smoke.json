@@ -17,12 +17,18 @@
       "command": "npm run smoke:pi",
       "exit_code": 0,
       "passed": true,
-      "evidence": "{\"type\":\"response\",\"command\":\"get_commands\",\"success\":true,\"data\":{\"commands\":[{\"name\":\"baton:new\",\"description\":\"Create a derived workflow scaffold from default-review-loop\",\"source\":\"extension\",\"sourceInfo\":{\"path\":\"C:\\\\Users\\\\Keisu\\\\multica_workspaces_desktop-api.multica.ai\\\\dotfield-9ac157d3a1bf\\\\dot-2277-0a024a090bdf\\\\workdir\\\\pi-baton\\\\extensions\\\\index.ts\",\"source\":\"cli\",\"scope\":\"temporary\",\"origin\":\"top-level\"}},{\"name\":\"baton:start\",\"description\":\"Create an idle Baton run from a workflow and task brief\",\"source\":\"extension\",\"sourceInfo\":{\"path\":\"C:\\\\Users\\\\Keisu\\\\multica_workspaces_desktop-api.multica.ai\\\\dotfield-9ac157d3a1bf\\\\dot-2277-0a024a090bdf\\\\workdir\\\\pi-baton\\\\extensions\\\\index.ts\",\"source\":\"cli\",\"scope\":\"temporary\",\"origin\":\"top-level\"}},{\"name\":\"baton:run\",\"description\":\"Run the active idle Baton run to a terminal state\",\"source\":\"extension\",\"sourceInfo\":{\"path\":\"C:\\\\Users\\\\Keisu\\\\multica_workspaces_desktop-api.multica.ai\\\\dotfield-9ac157d3a1bf\\\\dot-2277-0a024a090bdf\\\\workdir\\\\pi-baton\\\\extensions\\\\index.ts\",\"source\":\"cli\",\"scope\":\"temporary\",\"origin\":\"top-level\"}},{\"name\":\"baton:status\",\"description\":\"Show the active Baton run summary\",\"source\":\"extension\",\"sourceInfo\":{\"path\":\"C:\\\\Users\\\\Keisu\\\\multica_workspaces_desktop-api.multica.ai\\\\dotfield-9ac157d3a1bf\\\\dot-2277-0a024a090bdf\\\\workdir\\\\pi-baton\\\\extensions\\\\index.ts\",\"source\":\"cli\",\"scope\":\"temporary\",\"origin\":\"top-level\"}},{\"name\":\"baton:history\",\"description\":\"List recent completed or failed Baton runs from persisted history\",\"source\":\"extension\",\"sourceInfo\":{\"path\":\"C:\\\\Users\\\\Keisu\\\\multica_workspaces_desktop-api.multica.ai\\\\dotfield-9ac157d3a1bf\\\\dot-2277-0a024a090bdf\\\\workdir\\\\pi-baton\\\\extensions\\\\index.ts\",\"source\":\"cli\",\"scope\":\"temporary\",\"origin\":\"top-level\"}}]}}\n",
+      "evidence": "{\"type\":\"response\",\"command\":\"get_commands\",\"success\":true,\"data\":{\"commands\":[{\"name\":\"baton:new\",\"description\":\"Create a derived workflow scaffold from default-review-loop\",\"source\":\"extension\",\"sourceInfo\":{\"path\":\"<workspace>\\\\extensions\\\\index.ts\",\"source\":\"cli\",\"scope\":\"temporary\",\"origin\":\"top-level\"}},{\"name\":\"baton:start\",\"description\":\"Create an idle Baton run from a workflow and task brief\",\"source\":\"extension\",\"sourceInfo\":{\"path\":\"<workspace>\\\\extensions\\\\index.ts\",\"source\":\"cli\",\"scope\":\"temporary\",\"origin\":\"top-level\"}},{\"name\":\"baton:run\",\"description\":\"Run the active idle Baton run to a terminal state\",\"source\":\"extension\",\"sourceInfo\":{\"path\":\"<workspace>\\\\extensions\\\\index.ts\",\"source\":\"cli\",\"scope\":\"temporary\",\"origin\":\"top-level\"}},{\"name\":\"baton:status\",\"description\":\"Show the active Baton run summary\",\"source\":\"extension\",\"sourceInfo\":{\"path\":\"<workspace>\\\\extensions\\\\index.ts\",\"source\":\"cli\",\"scope\":\"temporary\",\"origin\":\"top-level\"}},{\"name\":\"baton:history\",\"description\":\"List recent completed or failed Baton runs from persisted history\",\"source\":\"extension\",\"sourceInfo\":{\"path\":\"<workspace>\\\\extensions\\\\index.ts\",\"source\":\"cli\",\"scope\":\"temporary\",\"origin\":\"top-level\"}}]}}\n",
       "assertions": [
         {
           "id": "extension_registered",
           "expected": "The actual Pi RPC host lists all five Baton extension commands",
           "observed": "[\"baton:new\",\"baton:start\",\"baton:run\",\"baton:status\",\"baton:history\"]",
+          "passed": true
+        },
+        {
+          "id": "valid_jsonl_stdout",
+          "expected": "Every non-empty Pi RPC stdout line is valid JSON",
+          "observed": "\"all records valid\"",
           "passed": true
         }
       ]
@@ -32,12 +38,18 @@
       "command": "npm run smoke:pi",
       "exit_code": 0,
       "passed": true,
-      "evidence": "{\"type\":\"extension_ui_request\",\"id\":\"0c71baa4-187c-46a0-b727-0426234e2e2e\",\"method\":\"notify\",\"message\":\"No completed or failed Baton runs yet. Start one with /baton:start, then /baton:run.\",\"notifyType\":\"info\"}\n{\"type\":\"response\",\"command\":\"prompt\",\"success\":true,\"data\":{\"disposition\":\"handled\"}}\n",
+      "evidence": "{\"type\":\"extension_ui_request\",\"id\":\"397bcc18-649c-48b4-b8cf-55f9f73ea487\",\"method\":\"notify\",\"message\":\"No completed or failed Baton runs yet. Start one with /baton:start, then /baton:run.\",\"notifyType\":\"info\"}\n{\"type\":\"response\",\"command\":\"prompt\",\"success\":true,\"data\":{\"disposition\":\"handled\"}}\n",
       "assertions": [
         {
           "id": "feature_response",
           "expected": "`/baton:history` returns the actual empty-history notice as a handled command",
-          "observed": "{\"prompt\":{\"type\":\"response\",\"command\":\"prompt\",\"success\":true,\"data\":{\"disposition\":\"handled\"}},\"notification\":{\"type\":\"extension_ui_request\",\"id\":\"0c71baa4-187c-46a0-b727-0426234e2e2e\",\"method\":\"notify\",\"message\":\"No completed or failed Baton runs yet. Start one with /baton:start, then /baton:run.\",\"notifyType\":\"info\"}}",
+          "observed": "{\"prompt\":{\"type\":\"response\",\"command\":\"prompt\",\"success\":true,\"data\":{\"disposition\":\"handled\"}},\"notification\":{\"type\":\"extension_ui_request\",\"id\":\"397bcc18-649c-48b4-b8cf-55f9f73ea487\",\"method\":\"notify\",\"message\":\"No completed or failed Baton runs yet. Start one with /baton:start, then /baton:run.\",\"notifyType\":\"info\"}}",
+          "passed": true
+        },
+        {
+          "id": "valid_jsonl_stdout",
+          "expected": "Every non-empty Pi RPC stdout line is valid JSON",
+          "observed": "\"all records valid\"",
           "passed": true
         }
       ]
@@ -47,12 +59,18 @@
       "command": "npm run smoke:pi",
       "exit_code": 0,
       "passed": true,
-      "evidence": "{\"type\":\"extension_ui_request\",\"id\":\"aa66d6cd-91a7-47ac-8095-3f225db699c5\",\"method\":\"notify\",\"message\":\"No active Baton run. Start one with /baton:start after choosing a workflow and task brief.\",\"notifyType\":\"info\"}\n{\"type\":\"response\",\"command\":\"prompt\",\"success\":true,\"data\":{\"disposition\":\"handled\"}}\n",
+      "evidence": "{\"type\":\"extension_ui_request\",\"id\":\"7ea68f93-c925-44f7-9910-9d5618f088f3\",\"method\":\"notify\",\"message\":\"No active Baton run. Start one with /baton:start after choosing a workflow and task brief.\",\"notifyType\":\"info\"}\n{\"type\":\"response\",\"command\":\"prompt\",\"success\":true,\"data\":{\"disposition\":\"handled\"}}\n",
       "assertions": [
         {
           "id": "handled_error",
           "expected": "`/baton:run` without an active run returns the handled no-active-run notice",
-          "observed": "{\"prompt\":{\"type\":\"response\",\"command\":\"prompt\",\"success\":true,\"data\":{\"disposition\":\"handled\"}},\"notification\":{\"type\":\"extension_ui_request\",\"id\":\"aa66d6cd-91a7-47ac-8095-3f225db699c5\",\"method\":\"notify\",\"message\":\"No active Baton run. Start one with /baton:start after choosing a workflow and task brief.\",\"notifyType\":\"info\"}}",
+          "observed": "{\"prompt\":{\"type\":\"response\",\"command\":\"prompt\",\"success\":true,\"data\":{\"disposition\":\"handled\"}},\"notification\":{\"type\":\"extension_ui_request\",\"id\":\"7ea68f93-c925-44f7-9910-9d5618f088f3\",\"method\":\"notify\",\"message\":\"No active Baton run. Start one with /baton:start after choosing a workflow and task brief.\",\"notifyType\":\"info\"}}",
+          "passed": true
+        },
+        {
+          "id": "valid_jsonl_stdout",
+          "expected": "Every non-empty Pi RPC stdout line is valid JSON",
+          "observed": "\"all records valid\"",
           "passed": true
         }
       ]
@@ -62,7 +80,7 @@
       "command": "npm run smoke:pi",
       "exit_code": 0,
       "passed": true,
-      "evidence": "{\"type\":\"response\",\"command\":\"get_commands\",\"success\":true,\"data\":{\"commands\":[{\"name\":\"baton:new\",\"description\":\"Create a derived workflow scaffold from default-review-loop\",\"source\":\"extension\",\"sourceInfo\":{\"path\":\"C:\\\\Users\\\\Keisu\\\\multica_workspaces_desktop-api.multica.ai\\\\dotfield-9ac157d3a1bf\\\\dot-2277-0a024a090bdf\\\\workdir\\\\pi-baton\\\\extensions\\\\index.ts\",\"source\":\"cli\",\"scope\":\"temporary\",\"origin\":\"top-level\"}},{\"name\":\"baton:start\",\"description\":\"Create an idle Baton run from a workflow and task brief\",\"source\":\"extension\",\"sourceInfo\":{\"path\":\"C:\\\\Users\\\\Keisu\\\\multica_workspaces_desktop-api.multica.ai\\\\dotfield-9ac157d3a1bf\\\\dot-2277-0a024a090bdf\\\\workdir\\\\pi-baton\\\\extensions\\\\index.ts\",\"source\":\"cli\",\"scope\":\"temporary\",\"origin\":\"top-level\"}},{\"name\":\"baton:run\",\"description\":\"Run the active idle Baton run to a terminal state\",\"source\":\"extension\",\"sourceInfo\":{\"path\":\"C:\\\\Users\\\\Keisu\\\\multica_workspaces_desktop-api.multica.ai\\\\dotfield-9ac157d3a1bf\\\\dot-2277-0a024a090bdf\\\\workdir\\\\pi-baton\\\\extensions\\\\index.ts\",\"source\":\"cli\",\"scope\":\"temporary\",\"origin\":\"top-level\"}},{\"name\":\"baton:status\",\"description\":\"Show the active Baton run summary\",\"source\":\"extension\",\"sourceInfo\":{\"path\":\"C:\\\\Users\\\\Keisu\\\\multica_workspaces_desktop-api.multica.ai\\\\dotfield-9ac157d3a1bf\\\\dot-2277-0a024a090bdf\\\\workdir\\\\pi-baton\\\\extensions\\\\index.ts\",\"source\":\"cli\",\"scope\":\"temporary\",\"origin\":\"top-level\"}},{\"name\":\"baton:history\",\"description\":\"List recent completed or failed Baton runs from persisted history\",\"source\":\"extension\",\"sourceInfo\":{\"path\":\"C:\\\\Users\\\\Keisu\\\\multica_workspaces_desktop-api.multica.ai\\\\dotfield-9ac157d3a1bf\\\\dot-2277-0a024a090bdf\\\\workdir\\\\pi-baton\\\\extensions\\\\index.ts\",\"source\":\"cli\",\"scope\":\"temporary\",\"origin\":\"top-level\"}}]}}\n{\"type\":\"extension_ui_request\",\"id\":\"78a44357-b87b-492b-bc20-fc9e818962c7\",\"method\":\"notify\",\"message\":\"No completed or failed Baton runs yet. Start one with /baton:start, then /baton:run.\",\"notifyType\":\"info\"}\n{\"type\":\"response\",\"command\":\"prompt\",\"success\":true,\"data\":{\"disposition\":\"handled\"}}\n",
+      "evidence": "{\"type\":\"response\",\"command\":\"get_commands\",\"success\":true,\"data\":{\"commands\":[{\"name\":\"baton:new\",\"description\":\"Create a derived workflow scaffold from default-review-loop\",\"source\":\"extension\",\"sourceInfo\":{\"path\":\"<workspace>\\\\extensions\\\\index.ts\",\"source\":\"cli\",\"scope\":\"temporary\",\"origin\":\"top-level\"}},{\"name\":\"baton:start\",\"description\":\"Create an idle Baton run from a workflow and task brief\",\"source\":\"extension\",\"sourceInfo\":{\"path\":\"<workspace>\\\\extensions\\\\index.ts\",\"source\":\"cli\",\"scope\":\"temporary\",\"origin\":\"top-level\"}},{\"name\":\"baton:run\",\"description\":\"Run the active idle Baton run to a terminal state\",\"source\":\"extension\",\"sourceInfo\":{\"path\":\"<workspace>\\\\extensions\\\\index.ts\",\"source\":\"cli\",\"scope\":\"temporary\",\"origin\":\"top-level\"}},{\"name\":\"baton:status\",\"description\":\"Show the active Baton run summary\",\"source\":\"extension\",\"sourceInfo\":{\"path\":\"<workspace>\\\\extensions\\\\index.ts\",\"source\":\"cli\",\"scope\":\"temporary\",\"origin\":\"top-level\"}},{\"name\":\"baton:history\",\"description\":\"List recent completed or failed Baton runs from persisted history\",\"source\":\"extension\",\"sourceInfo\":{\"path\":\"<workspace>\\\\extensions\\\\index.ts\",\"source\":\"cli\",\"scope\":\"temporary\",\"origin\":\"top-level\"}}]}}\n{\"type\":\"extension_ui_request\",\"id\":\"a32a52cb-bd6a-4bb0-9869-1b4a019132ce\",\"method\":\"notify\",\"message\":\"No completed or failed Baton runs yet. Start one with /baton:start, then /baton:run.\",\"notifyType\":\"info\"}\n{\"type\":\"response\",\"command\":\"prompt\",\"success\":true,\"data\":{\"disposition\":\"handled\"}}\n",
       "assertions": [
         {
           "id": "reloaded_extension_registered",
@@ -73,13 +91,19 @@
         {
           "id": "reloaded_feature_response",
           "expected": "The second process handles `/baton:history` and returns its actual notice",
-          "observed": "{\"prompt\":{\"type\":\"response\",\"command\":\"prompt\",\"success\":true,\"data\":{\"disposition\":\"handled\"}},\"notification\":{\"type\":\"extension_ui_request\",\"id\":\"78a44357-b87b-492b-bc20-fc9e818962c7\",\"method\":\"notify\",\"message\":\"No completed or failed Baton runs yet. Start one with /baton:start, then /baton:run.\",\"notifyType\":\"info\"}}",
+          "observed": "{\"prompt\":{\"type\":\"response\",\"command\":\"prompt\",\"success\":true,\"data\":{\"disposition\":\"handled\"}},\"notification\":{\"type\":\"extension_ui_request\",\"id\":\"a32a52cb-bd6a-4bb0-9869-1b4a019132ce\",\"method\":\"notify\",\"message\":\"No completed or failed Baton runs yet. Start one with /baton:start, then /baton:run.\",\"notifyType\":\"info\"}}",
           "passed": true
         },
         {
           "id": "clean_shutdown",
           "expected": "The second Pi host exits zero without unhandled or shutdown errors",
           "observed": "{\"exit_code\":0,\"has_unhandled_error\":false}",
+          "passed": true
+        },
+        {
+          "id": "valid_jsonl_stdout",
+          "expected": "Every non-empty Pi RPC stdout line is valid JSON",
+          "observed": "\"all records valid\"",
           "passed": true
         }
       ]

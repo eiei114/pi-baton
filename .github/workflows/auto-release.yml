@@ -22,32 +22,8 @@ jobs:
         id: check
         shell: bash
         run: |
-          BEFORE="${{ github.event.before }}"
-          if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then
-            BEFORE="$(git rev-parse HEAD^)"
-          fi
           CURRENT_VERSION=$(node -p "require('./package.json').version")
           TAG="v${CURRENT_VERSION}"
-
-          if [ -z "$BEFORE" ] || printf '%s' "$BEFORE" | grep -Eq '^0+$'; then
-            echo "No previous commit is available; skipping auto release."
-            echo "released=false" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-
-          if ! git cat-file -e "${BEFORE}:package.json" 2>/dev/null; then
-            echo "Previous package.json is not available; skipping auto release."
-            echo "released=false" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-
-          PREVIOUS_VERSION=$(git show "${BEFORE}:package.json" | node -e "let input=''; process.stdin.on('data', c => input += c); process.stdin.on('end', () => console.log(JSON.parse(input).version || ''));")
-
-          if [ "$CURRENT_VERSION" = "$PREVIOUS_VERSION" ]; then
-            echo "package.json version did not change (${CURRENT_VERSION}); skipping."
-            echo "released=false" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
 
           if git tag -l "$TAG" | grep -qx "$TAG"; then
             echo "Tag $TAG already exists; skipping."
@@ -55,7 +31,19 @@ jobs:
             exit 0
           fi
 
-          echo "Version bump detected: ${PREVIOUS_VERSION} -> ${CURRENT_VERSION}."
+          PREVIOUS_TAG=$(git tag --list 'v[0-9]*' --sort=-version:refname | head -n 1)
+          PREVIOUS_VERSION=""
+          if [ -n "$PREVIOUS_TAG" ]; then
+            PREVIOUS_VERSION=$(git show "${PREVIOUS_TAG}:package.json" | node -e "let input=''; process.stdin.on('data', c => input += c); process.stdin.on('end', () => console.log(JSON.parse(input).version || ''));")
+          fi
+
+          if [ -n "$PREVIOUS_VERSION" ] && [ "$CURRENT_VERSION" = "$PREVIOUS_VERSION" ]; then
+            echo "package.json version matches the last released version (${CURRENT_VERSION}); skipping."
+            echo "released=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "Version bump detected: ${PREVIOUS_VERSION:-none} -> ${CURRENT_VERSION}."
           echo "released=true" >> "$GITHUB_OUTPUT"
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
 

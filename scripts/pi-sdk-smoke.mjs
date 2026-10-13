@@ -1,11 +1,13 @@
 import { spawn, spawnSync } from "node:child_process";
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
+import { homedir, tmpdir } from "node:os";
 import { dirname, resolve } from "node:path";
 import {
   behaviorAssertions,
   EXTENSION_LOAD_ERROR_PATTERN,
   parseJsonLines,
+  parseRpcStdout,
+  redactLocalPaths,
   SDK_NAMES,
   UNHANDLED_ERROR_PATTERN,
   VERIFICATION_CONTRACT,
@@ -31,6 +33,14 @@ const codingAgentDir = resolve(root, "node_modules/@earendil-works/pi-coding-age
 const piManifest = readJson(resolve(codingAgentDir, "package.json"));
 const piCli = resolve(codingAgentDir, piManifest.bin.pi);
 const tempRoot = mkdtempSync(resolve(tmpdir(), "pi-baton-sdk-smoke-"));
+const evidencePaths = [
+  [root, "<workspace>"],
+  [tempRoot, "<smoke-temp>"],
+  [tmpdir(), "<system-temp>"],
+  [homedir(), "<home>"],
+  [process.env.USERPROFILE, "<home>"],
+  [process.env.HOME, "<home>"],
+];
 const agentDir = resolve(tempRoot, "agent");
 const extensionPath = resolve(root, "extensions/index.ts");
 mkdirSync(agentDir, { recursive: true });
@@ -96,7 +106,13 @@ function runPi(name, messages) {
     child.stderr.setEncoding("utf8");
     child.stdout.on("data", (chunk) => {
       stdout += chunk;
-      const responses = parseJsonLines(stdout);
+      let responses;
+      try {
+        responses = parseJsonLines(stdout, { allowIncompleteTrailing: true });
+      } catch (error) {
+        terminateAfterFailure(error);
+        return;
+      }
       const hasPromptResponse = responses.some((row) => row?.type === "response" && row.command === "prompt");
       const hasCommandList = responses.some((row) => row?.type === "response" && row.command === "get_commands");
       if ((name === "extension_load" && hasCommandList)
@@ -142,13 +158,15 @@ function runHostShell() {
 function evaluate(name, result) {
   const fullOutput = `${result.stdout ?? ""}${result.stderr ?? ""}`;
   const exit_code = result.status ?? 1;
-  const responses = [...parseJsonLines(result.stdout ?? ""), ...parseJsonLines(result.stderr ?? "")];
+  const rpcOutput = name === "host_shell" ? null : parseRpcStdout(result.stdout ?? "");
+  const responses = rpcOutput?.responses ?? [];
   const assertions = behaviorAssertions(name, {
     responses,
     fullOutput,
     exit_code,
     expectedVersion: sdkVersions["@earendil-works/pi-coding-agent"],
   });
+  if (rpcOutput) assertions.push(rpcOutput.validation);
   const hasUnhandledError = UNHANDLED_ERROR_PATTERN.test(fullOutput);
   const hasLoadError = EXTENSION_LOAD_ERROR_PATTERN.test(fullOutput);
   return {
@@ -156,7 +174,8 @@ function evaluate(name, result) {
     command: "npm run smoke:pi",
     exit_code,
     passed: exit_code === 0 && !result.error && !hasUnhandledError && !hasLoadError && assertions.every((item) => item.passed),
-    evidence: fullOutput.slice(-6000) || String(result.error?.message ?? "No output captured"),
+    evidence: redactLocalPaths(fullOutput, evidencePaths).slice(-6000)
+      || redactLocalPaths(String(result.error?.message ?? "No output captured"), evidencePaths),
     assertions,
     hasUnhandledError,
     hasLoadError,

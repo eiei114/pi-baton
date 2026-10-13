@@ -19,15 +19,50 @@ export const NO_ACTIVE_RUN_MESSAGE =
 export const UNHANDLED_ERROR_PATTERN = /UnhandledPromiseRejection|uncaught exception|shutdown error|unhandled error/i;
 export const EXTENSION_LOAD_ERROR_PATTERN = /Failed to load extension|Error loading extension|extension_error/i;
 
-export function parseJsonLines(output) {
-  return output.split(/\r?\n/).flatMap((line) => {
+export function parseJsonLines(output, { allowIncompleteTrailing = false } = {}) {
+  const lines = output.split(/\r?\n/);
+  if (allowIncompleteTrailing && !output.endsWith("\n")) lines.pop();
+  return lines.flatMap((line, index) => {
     if (!line.trim()) return [];
     try {
       return [JSON.parse(line)];
     } catch {
-      return [];
+      throw new SyntaxError(`Invalid JSON Lines record at line ${index + 1}`);
     }
   });
+}
+
+export function parseRpcStdout(output) {
+  try {
+    return {
+      responses: parseJsonLines(output),
+      validation: assertion("valid_jsonl_stdout", "Every non-empty Pi RPC stdout line is valid JSON", "all records valid", true),
+    };
+  } catch (error) {
+    return {
+      responses: [],
+      validation: assertion("valid_jsonl_stdout", "Every non-empty Pi RPC stdout line is valid JSON", error.message, false),
+    };
+  }
+}
+
+export function redactLocalPaths(output, paths) {
+  let redacted = String(output);
+  const variants = new Map();
+  for (const [path, label] of paths) {
+    if (!path) continue;
+    const variantsForPath = [path, path.replaceAll("\\", "/"), path.replaceAll("/", "\\")];
+    variantsForPath.push(...variantsForPath.map((variant) => JSON.stringify(variant).slice(1, -1)));
+    for (const variant of new Set(variantsForPath)) {
+      variants.set(variant, label);
+    }
+  }
+
+  for (const [path, label] of [...variants].sort(([left], [right]) => right.length - left.length)) {
+    const escaped = path.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    redacted = redacted.replace(new RegExp(escaped, "gi"), label);
+  }
+  return redacted;
 }
 
 function assertion(id, expected, observed, passed) {
