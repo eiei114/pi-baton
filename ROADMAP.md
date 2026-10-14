@@ -12,7 +12,7 @@
 | Latest release | **0.8.7** |
 | Next planned | **0.9.0** — dependency hygiene, abort coverage, and lifecycle UX polish |
 | Stability | Early / pre-1.0; surface (`/baton:*` commands + YAML schema) is stabilizing |
-| CI | `npm run ci` green (typecheck + 100 tests + actual Pi SDK smoke + `npm pack --dry-run`) |
+| CI | `npm run ci` green (typecheck + 101 tests + actual Pi SDK smoke + `npm pack --dry-run`) |
 | Security | `npm audit` reports 0 vulnerabilities |
 | npm publishing | npm Trusted Publishing (OIDC), no `NPM_TOKEN` |
 
@@ -35,7 +35,7 @@ contract, and a live progress widget.
 | `lib/` | Workflow parser, schema validation, run engine, run store, subagent runner, review contract, model routing, UI widget, status formatter |
 | `agents/` | Builtin `worker` and `reviewer` subagent definitions |
 | `workflows/*.yaml` | Builtin workflows (default review loop and two-stage review gauntlet) |
-| `tests/*.test.mjs` | 100 tests (engine, store, schema, discovery, scaffold, widget, status, history, agents, commands, handoff, kebab-case, model-routing, review-contract, extension-registration, Pi SDK smoke contract, smoke) |
+| `tests/*.test.mjs` | 101 tests (engine, store, schema, discovery, scaffold, widget, status, history, agents, commands, handoff, kebab-case, model-routing, review-contract, extension-registration, Pi SDK smoke contract, smoke) |
 
 ### Architecture in one paragraph
 

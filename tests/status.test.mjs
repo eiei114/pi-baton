@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
 
-const { formatStatusSummary, NO_ACTIVE_RUN_MESSAGE } = await import("../lib/status.ts");
+const { formatHistorySummary, formatStatusSummary, NO_ACTIVE_RUN_MESSAGE } = await import("../lib/status.ts");
 const { runContinuous } = await import("../lib/run-engine.ts");
 const { createIdleRun, loadMostRecentTerminalRun, updateRunState } = await import("../lib/run-store.ts");
 const { getPackageWorkflowsDir } = await import("../lib/paths.ts");
@@ -51,6 +51,14 @@ test("formatStatusSummary reports workflow, brief, steps, state, and iteration",
   assert.match(summary, /run state: idle/);
   assert.match(summary, /iteration count: 0/);
   assert.match(summary, /run directory: \.pi\/baton\/runs\/20260620000000-abcd1234/);
+});
+
+test("status and history summaries use the same relative run-directory format", () => {
+  const statusDirectory = formatStatusSummary(manifest).match(/^run directory: (.+)$/m)?.[1];
+  const historyDirectory = formatHistorySummary({ runs: [manifest], skippedCount: 0 }).split(" | ").at(-1);
+
+  assert.equal(statusDirectory, ".pi/baton/runs/20260620000000-abcd1234");
+  assert.equal(historyDirectory, statusDirectory);
 });
 
 test("formatStatusSummary shows last step after progress", () => {
