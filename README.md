@@ -160,12 +160,7 @@ npm run ci
 
 This package uses npm Trusted Publishing with GitHub Actions OIDC — no `NPM_TOKEN` is required.
 
-```bash
-npm version patch
-git push
-```
-
-Releases are manual: after merging a version bump to `main`, run the **Release (manual)** workflow (`workflow_dispatch`) to create the tag and release and dispatch publishing. Merging alone never releases or publishes. See [`docs/release.md`](docs/release.md) for setup details.
+Package-version changes merged to `main` do not trigger a release. A maintainer explicitly dispatches the release workflow when a release is authorized. See [`docs/release.md`](docs/release.md) for setup details.
 
 ## Security
 
