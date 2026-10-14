@@ -9,7 +9,7 @@
 
 | Field | Value |
 |---|---|
-| Latest release | **0.8.6** |
+| Latest release | **0.8.7** |
 | Next planned | **0.9.0** — dependency hygiene, abort coverage, and lifecycle UX polish |
 | Stability | Early / pre-1.0; surface (`/baton:*` commands + YAML schema) is stabilizing |
 | CI | `npm run ci` green (typecheck + 105 tests + `npm pack --dry-run`) |

@@ -19,7 +19,7 @@ export function formatStatusSummary(manifest: RunManifest): string {
     `current step: ${manifest.currentStep ?? "(none)"}`,
     `run state: ${manifest.state}`,
     `iteration count: ${manifest.iteration}`,
-    `run directory: .pi/baton/runs/${manifest.id}`,
+    `run directory: ${formatRelativeRunDirectory(manifest.id)}`,
   );
 
   if (manifest.failureReason) {
