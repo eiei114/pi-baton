@@ -12,35 +12,29 @@ On npmjs.com, configure Trusted Publishing for this package:
 - Repository: this GitHub repository
 - Workflow filename: `publish.yml`
 
-## Publish
+## Release and publish
 
-```bash
-npm version patch
-git push
-```
+Package version changes merged to `main` never create a tag, GitHub Release, or npm publication automatically. After review, a maintainer may explicitly dispatch `.github/workflows/auto-release.yml` on `main`. It checks for a new package version, creates its tag and GitHub Release, then explicitly dispatches `.github/workflows/publish.yml` for that tag. Do not dispatch this workflow as part of routine implementation or verification.
 
-On `main`, `.github/workflows/auto-release.yml` checks `package.json` version. If `v<version>` does not exist yet, it creates the tag, creates the GitHub Release, then explicitly dispatches `.github/workflows/publish.yml` for that tag. Version bumps on `main` do not trigger `publish.yml` directly; auto-release is the single handoff path for those commits.
-
-The `v*.*.*` tag push also triggers `.github/workflows/publish.yml`, which runs CI and publishes to npm when tags are pushed manually.
-Publishing also runs when a GitHub Release is published, and can be run manually from GitHub Actions with `workflow_dispatch`.
+The `v*.*.*` tag push also triggers `.github/workflows/publish.yml`. Publishing can also be run by publishing a GitHub Release or explicitly dispatching the workflow. These are maintainer-controlled release actions.
 
 The workflow skips `name@version` if that exact package version already exists on npm.
 
 ## Workflow guardrail
 
 Do not ship a new Pi OSS package or version bump with only `package.json` changes.
-The repository must include the release workflow pair:
+The repository must keep release and publication behind an explicit maintainer action:
 
-- `.github/workflows/auto-release.yml` creates `v<version>` tags and GitHub Releases from `main` version bumps.
+- `.github/workflows/auto-release.yml` is manually dispatched on `main` to create `v<version>` tags and GitHub Releases.
 - `.github/workflows/publish.yml` publishes to npm through Trusted Publishing.
 
-Important: tags or releases created by `GITHUB_TOKEN` do not reliably fan out into another workflow through normal `push.tags` or `release.published` triggers. The template keeps publishing reliable by having `auto-release.yml` explicitly dispatch `publish.yml` after creating the tag/release. If you change the release flow, keep one explicit handoff path: `workflow_dispatch` from auto-release, `repository_dispatch`, or `workflow_run` on the auto-release workflow.
+Important: tags or releases created by `GITHUB_TOKEN` do not reliably fan out into another workflow through normal `push.tags` or `release.published` triggers. `auto-release.yml` explicitly dispatches `publish.yml` after a maintainer starts a release. If you change the release flow, keep one explicit handoff path: `workflow_dispatch` from auto-release, `repository_dispatch`, or `workflow_run` on the auto-release workflow.
 
 ## GitHub Actions requirements
 
 - `permissions: id-token: write`
 - `permissions: actions: write` on auto-release so it can dispatch `publish.yml`
-- `auto-release.yml` must call `gh workflow run publish.yml --ref "$TAG" -f ref="$TAG"`, or `publish.yml` must have an equivalent explicit handoff trigger such as `workflow_run`
+- `auto-release.yml` must run only on explicit maintainer dispatch and call `gh workflow run publish.yml --ref "$TAG" -f ref="$TAG"`, or `publish.yml` must have an equivalent explicit handoff trigger such as `workflow_run`
 - GitHub-hosted runner
 - Node.js 24, so the release job uses a current npm CLI for Trusted Publishing
 - No `NPM_TOKEN`

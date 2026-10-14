@@ -8,6 +8,10 @@ const packageJson = JSON.parse(await readFile(new URL("../package.json", import.
 const readme = await readFile(new URL("../README.md", import.meta.url), "utf8");
 const workflowsGuide = await readFile(new URL("../docs/workflows.md", import.meta.url), "utf8");
 const contributing = await readFile(new URL("../CONTRIBUTING.md", import.meta.url), "utf8");
+const autoReleaseWorkflow = await readFile(
+  new URL("../.github/workflows/auto-release.yml", import.meta.url),
+  "utf8",
+);
 const publishWorkflow = await readFile(
   new URL("../.github/workflows/publish.yml", import.meta.url),
   "utf8",
@@ -60,10 +64,14 @@ test("ROADMAP next planned version matches package version", async () => {
   assert.equal(match[1], packageJson.version);
 });
 
-test("CONTRIBUTING release instructions use auto-release push flow", () => {
-  assert.doesNotMatch(contributing, /--follow-tags/);
-  assert.match(contributing, /npm version patch\s+git push/m);
-  assert.match(contributing, /auto-release/);
+test("release workflow stays behind explicit maintainer dispatch, not a main version bump push", () => {
+  assert.match(contributing, /explicitly dispatches the release workflow on `main`/);
+  assert.match(autoReleaseWorkflow, /^on:\s*\n\s+workflow_dispatch:\s*$/m);
+  assert.doesNotMatch(autoReleaseWorkflow, /^\s+push:/m);
+  assert.match(autoReleaseWorkflow, /if: github\.event_name == 'workflow_dispatch' && github\.ref == 'refs\/heads\/main'/);
+  assert.match(autoReleaseWorkflow, /git tag --list 'v\[0-9\]\*' --sort=-version:refname/);
+  assert.match(autoReleaseWorkflow, /git show "\$\{PREVIOUS_TAG\}:package\.json"/);
+  assert.doesNotMatch(autoReleaseWorkflow, /git rev-parse HEAD\^/);
 });
 
 test("publish workflow avoids duplicate main push trigger for version bumps", () => {
@@ -90,7 +98,7 @@ test("ROADMAP test inventory matches the node:test suite size", async () => {
   const surfaceMapMatch = roadmap.match(
     /\| `tests\/\*\.test\.mjs` \| (\d+) tests /,
   );
-  const ciStatusMatch = roadmap.match(/typecheck \+ (\d+) tests \+ `npm pack --dry-run`/);
+  const ciStatusMatch = roadmap.match(/typecheck \+ (\d+) tests \+ actual Pi SDK smoke \+ `npm pack --dry-run`/);
 
   assert.ok(surfaceMapMatch, "ROADMAP surface map should document the test suite size");
   assert.ok(ciStatusMatch, "ROADMAP release status should document the CI test count");
