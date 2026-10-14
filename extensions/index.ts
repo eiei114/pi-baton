@@ -4,6 +4,11 @@ import type { ExtensionAPI, ExtensionCommandContext } from "@earendil-works/pi-c
 import { MissingAgentsError, validateWorkflowAgents } from "../lib/agents.ts";
 import { ensureBatonScaffolding } from "../lib/paths.ts";
 import { formatRunResultSummary, runContinuous } from "../lib/run-engine.ts";
+import {
+  formatRunInspection,
+  formatRunInspectionChoice,
+  inspectSelectedRun,
+} from "../lib/run-inspection.ts";
 import { createRunUiController } from "../lib/run-ui.ts";
 import {
   ActiveRunGuardError,
@@ -210,6 +215,53 @@ export default function (pi: ExtensionAPI) {
     handler: async (_args, ctx) => {
       const history = await loadTerminalRunHistory(ctx.cwd);
       ctx.ui.notify(formatHistorySummary(history), "info");
+    },
+  });
+
+  pi.registerCommand("baton:inspect", {
+    description: "Inspect structured step summaries from a selected completed or failed run",
+    handler: async (_args, ctx) => {
+      if (!requireUi(ctx)) return;
+
+      try {
+        const history = await loadTerminalRunHistory(ctx.cwd, {
+          limit: 10,
+          ensureDirectories: false,
+        });
+        if (history.runs.length === 0) {
+          ctx.ui.notify(
+            "No completed or failed Baton runs to inspect. Use /baton:history to review persisted run history.",
+            "info",
+          );
+          return;
+        }
+
+        const choices = history.runs.map((manifest, index) =>
+          formatRunInspectionChoice(manifest, index),
+        );
+        const selectedChoice = await ctx.ui.select("Choose a completed or failed run:", choices);
+        if (!selectedChoice) return;
+
+        const selectedIndex = choices.indexOf(selectedChoice);
+        if (selectedIndex < 0) return;
+
+        const selectedRun = history.runs[selectedIndex];
+        const result = await inspectSelectedRun(ctx.cwd, selectedRun.id);
+        if (result.status === "stale") {
+          ctx.ui.notify(
+            "The selected run is unavailable or is no longer terminal. Use /baton:history and choose a completed or failed run.",
+            "warning",
+          );
+          return;
+        }
+
+        ctx.ui.notify(formatRunInspection(result.inspection), "info");
+      } catch {
+        ctx.ui.notify(
+          "Unable to inspect the selected run. Its manifest or structured step records may be unavailable.",
+          "warning",
+        );
+      }
     },
   });
 }

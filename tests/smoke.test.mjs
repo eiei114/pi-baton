@@ -6,6 +6,7 @@ import test from "node:test";
 
 const packageJson = JSON.parse(await readFile(new URL("../package.json", import.meta.url), "utf8"));
 const readme = await readFile(new URL("../README.md", import.meta.url), "utf8");
+const workflowsGuide = await readFile(new URL("../docs/workflows.md", import.meta.url), "utf8");
 const contributing = await readFile(new URL("../CONTRIBUTING.md", import.meta.url), "utf8");
 const autoReleaseWorkflow = await readFile(
   new URL("../.github/workflows/auto-release.yml", import.meta.url),
@@ -50,11 +51,16 @@ test("README quick start documents terminal run fallback for /baton:status", () 
   assert.match(readme, /\/baton:status\s+show the active run summary, or the most recent finished run/);
 });
 
-test("ROADMAP latest release matches package version", async () => {
-  const roadmap = await readFile(new URL("../ROADMAP.md", import.meta.url), "utf8");
-  const match = roadmap.match(/Latest release \| \*\*(\d+\.\d+\.\d+)\*\*/);
+test("README and workflow guide distinguish /baton:history from /baton:inspect", () => {
+  assert.match(readme, /Use `\/baton:history` to find a recent completed or failed run[\s\S]*use `\/baton:inspect` to choose one/);
+  assert.match(workflowsGuide, /`\/baton:history` to find a run; use `\/baton:inspect` to understand its structured step results/);
+});
 
-  assert.ok(match, "ROADMAP should document the latest release version");
+test("ROADMAP next planned version matches package version", async () => {
+  const roadmap = await readFile(new URL("../ROADMAP.md", import.meta.url), "utf8");
+  const match = roadmap.match(/Next planned \| \*\*(\d+\.\d+\.\d+)\*\*/);
+
+  assert.ok(match, "ROADMAP should document the next planned package version");
   assert.equal(match[1], packageJson.version);
 });
 

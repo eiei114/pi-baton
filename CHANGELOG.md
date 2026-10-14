@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.9.0] - 2026-10-12
+
+### Added
+
+- Add read-only `/baton:inspect` to choose a recent completed or failed run and display bounded structured step summaries and review decisions without opening raw output.
+- Document the distinct roles of `/baton:history` and `/baton:inspect` in README and the workflow guide.
+
+### Changed
+
+- Bump the package version to `0.9.0` for the backward-compatible inspection feature.
+
 ## 0.8.5 - 2026-09-27
 
 - chore: periodic patch bump after 7+ days without npm publish

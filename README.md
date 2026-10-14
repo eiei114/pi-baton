@@ -39,7 +39,7 @@ pi install npm:pi-baton
 Pin a specific version when you want reproducible installs:
 
 ```bash
-pi install npm:pi-baton@0.8.7
+pi install npm:pi-baton@0.9.0
 ```
 
 Install into the current project instead of your user Pi settings:
@@ -76,9 +76,10 @@ Then run:
 /baton:run        execute run to terminal state (with live widget)
 /baton:status     show the active run summary, or the most recent finished run
 /baton:history    list recent completed or failed runs from persisted history
+/baton:inspect    choose a terminal run and inspect its structured step summaries
 ```
 
-Use `/baton:status` for the active run or the single most recent finished run. Use `/baton:history` when you need a short list of recent completed or failed runs and their `.pi/baton/runs/<id>` directories.
+Use `/baton:status` for the active run or the single most recent finished run. Use `/baton:history` to find a recent completed or failed run and its run directory; use `/baton:inspect` to choose one of those runs and read its bounded structured step summaries and review decision. `/baton:inspect` never opens raw output.
 
 Builtin workflows work out of the box — no agent setup required:
 
@@ -142,7 +143,7 @@ steps:
 
 | Path | Purpose |
 |---|---|
-| `extensions/` | Slash-command entrypoints (`/baton:new`, `/baton:start`, `/baton:run`, `/baton:status`, `/baton:history`) |
+| `extensions/` | Slash-command entrypoints (`/baton:new`, `/baton:start`, `/baton:run`, `/baton:status`, `/baton:history`, `/baton:inspect`) |
 | `lib/` | Workflow parser, run engine, subagent runner, review contract, UI widget |
 | `agents/` | Builtin `worker` and `reviewer` subagent definitions |
 | `workflows/` | Builtin workflows (`default-review-loop.yaml`, `two-stage-review-gauntlet.yaml`) |
@@ -160,7 +161,12 @@ npm run ci
 
 This package uses npm Trusted Publishing with GitHub Actions OIDC — no `NPM_TOKEN` is required.
 
-Package-version changes merged to `main` do not trigger a release. A maintainer explicitly dispatches the release workflow when a release is authorized. See [`docs/release.md`](docs/release.md) for setup details.
+```bash
+npm version patch
+git push
+```
+
+On `main`, version bumps trigger auto-release and publish workflows. See [`docs/release.md`](docs/release.md) for setup details.
 
 ## Security
 

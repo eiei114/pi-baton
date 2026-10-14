@@ -145,6 +145,7 @@ To customize behavior, add `.pi/agents/worker.md` or `.pi/agents/reviewer.md` in
 7. Run `/baton:start` to pick the workflow, then `/baton:run` to execute.
 8. Run `/baton:status` to inspect the active run, or the most recent finished run after `/baton:run` completes.
 9. Run `/baton:history` to list recent completed or failed runs when you need older terminal outcomes or run directories. `/baton:status` stays focused on the active run or the latest finished run only.
+10. Run `/baton:inspect` to choose a completed or failed run and read its persisted step summaries and review decision. Use `/baton:history` to find a run; use `/baton:inspect` to understand its structured step results. Inspection is read-only and does not open raw output.
 
 ## Examples
 
