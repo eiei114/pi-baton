@@ -21,18 +21,19 @@ jobs:
         id: check
         shell: bash
         run: |
-          BEFORE="${{ github.event.before }}"
           CURRENT_VERSION=$(node -p "require('./package.json').version")
           TAG="v${CURRENT_VERSION}"
 
-          if [ -z "$BEFORE" ] || printf '%s' "$BEFORE" | grep -Eq '^0+$'; then
-            echo "No previous commit is available; skipping auto release."
-            echo "released=false" >> "$GITHUB_OUTPUT"
-            exit 0
+          # workflow_dispatch has no push "before" SHA, so the baseline is the
+          # previous stable release tag, falling back to the dispatched commit's
+          # first parent when no release tag exists yet.
+          BEFORE="$(git tag --sort=-version:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -1)"
+          if [ -z "$BEFORE" ]; then
+            BEFORE="$(git rev-parse HEAD^ 2>/dev/null || true)"
           fi
 
-          if ! git cat-file -e "${BEFORE}:package.json" 2>/dev/null; then
-            echo "Previous package.json is not available; skipping auto release."
+          if [ -z "$BEFORE" ] || ! git cat-file -e "${BEFORE}:package.json" 2>/dev/null; then
+            echo "No previous baseline is available; skipping auto release."
             echo "released=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi

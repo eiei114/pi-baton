@@ -165,7 +165,7 @@ npm version patch
 git push
 ```
 
-On `main`, version bumps trigger auto-release and publish workflows. See [`docs/release.md`](docs/release.md) for setup details.
+Releases are manual: after merging a version bump to `main`, run the **Release (manual)** workflow (`workflow_dispatch`) to create the tag and release and dispatch publishing. Merging alone never releases or publishes. See [`docs/release.md`](docs/release.md) for setup details.
 
 ## Security
 
