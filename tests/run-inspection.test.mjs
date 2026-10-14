@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
-import { mkdir, mkdtemp, open, readFile, readdir, rm, writeFile } from "node:fs/promises";
+import { constants as fsConstants } from "node:fs";
+import { access, mkdir, mkdtemp, open, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
@@ -59,6 +60,13 @@ function stepRecord(overrides = {}) {
   };
 }
 
+async function assertMissingRunStorage(cwd) {
+  await assert.rejects(
+    access(join(cwd, ".pi", "baton", "runs"), fsConstants.F_OK),
+    (error) => error && "code" in error && error.code === "ENOENT",
+  );
+}
+
 async function writeRun(cwd, manifest, records = {}) {
   const runDir = join(cwd, ".pi", "baton", "runs", manifest.id);
   const stepsDir = getRunStepsDir(cwd, manifest.id);
@@ -91,7 +99,11 @@ function trackedFileSystem({ failReadFile, failOpen } = {}) {
     async open(filePath) {
       paths.open.push(filePath);
       if (failOpen?.(filePath)) throw new Error("unreadable");
-      return open(filePath, "r");
+      const flags =
+        typeof fsConstants.O_NOFOLLOW === "number"
+          ? fsConstants.O_RDONLY | fsConstants.O_NOFOLLOW
+          : fsConstants.O_RDONLY;
+      return open(filePath, flags);
     },
   };
 }
@@ -170,7 +182,7 @@ test("/baton:inspect chooser cancellation creates no run storage when none exist
     assert.equal(ui.choicesSeen, undefined);
     assert.equal(ui.notifications.length, 1);
     assert.match(ui.notifications[0].message, /No completed or failed Baton runs/);
-    await assert.rejects(readFile(join(cwd, ".pi", "baton", "runs")));
+    await assertMissingRunStorage(cwd);
   } finally {
     await rm(cwd, { recursive: true, force: true });
   }
@@ -185,7 +197,69 @@ test("/baton:inspect follows the UI guard", async () => {
     assert.deepEqual(notifications, [
       { message: "Pi Baton commands require interactive UI.", level: "warning" },
     ]);
-    await assert.rejects(readFile(join(cwd, ".pi", "baton", "runs")));
+    await assertMissingRunStorage(cwd);
+  } finally {
+    await rm(cwd, { recursive: true, force: true });
+  }
+});
+
+test("inspection rejects symlinked steps directories and step entries", async () => {
+  const cwd = await mkdtemp(join(tmpdir(), "pi-baton-inspect-symlink-"));
+  const id = "20261012000000-symlink-steps";
+
+  try {
+    await writeRun(cwd, baseManifest(id));
+    const symlinkSteps = {
+      async readFile(filePath) {
+        return readFile(filePath);
+      },
+      async readdir() {
+        return [];
+      },
+      async lstat(filePath) {
+        if (filePath.endsWith("steps")) {
+          return { isSymbolicLink: () => true, isFile: () => false };
+        }
+        const { lstat } = await import("node:fs/promises");
+        return lstat(filePath);
+      },
+      async open() {
+        throw new Error("should not open step files for a symlinked steps directory");
+      },
+    };
+    const blocked = await inspectSelectedRun(cwd, id, symlinkSteps);
+    assert.equal(blocked.status, "ready");
+    assert.equal(blocked.inspection.stepsUnavailable, true);
+
+    await writeRun(cwd, baseManifest("20261012000000-symlink-entry"), {
+      "good.json": stepRecord({ envelope: { summary: "kept", rawOutputPath: "" } }),
+    });
+    const entrySteps = {
+      async readFile(filePath) {
+        return readFile(filePath);
+      },
+      async readdir(directoryPath) {
+        return [
+          { name: "good.json", isFile: () => true, isSymbolicLink: () => false },
+          { name: "linked.json", isFile: () => false, isSymbolicLink: () => true },
+        ];
+      },
+      async lstat(filePath) {
+        const { lstat } = await import("node:fs/promises");
+        return lstat(filePath);
+      },
+      async open(filePath) {
+        const flags =
+          typeof fsConstants.O_NOFOLLOW === "number"
+            ? fsConstants.O_RDONLY | fsConstants.O_NOFOLLOW
+            : fsConstants.O_RDONLY;
+        return open(filePath, flags);
+      },
+    };
+    const filtered = await inspectSelectedRun(cwd, "20261012000000-symlink-entry", entrySteps);
+    assert.equal(filtered.status, "ready");
+    assert.equal(filtered.inspection.records.length, 1);
+    assert.equal(filtered.inspection.records[0].summary, "kept");
   } finally {
     await rm(cwd, { recursive: true, force: true });
   }

@@ -1,3 +1,4 @@
+import { constants as fsConstants } from "node:fs";
 import { lstat, open, readdir, readFile } from "node:fs/promises";
 import type { Dirent, Stats } from "node:fs";
 import type { FileHandle } from "node:fs/promises";
@@ -49,11 +50,16 @@ export interface InspectionFileSystem {
   open(filePath: string): Promise<ReadableFileHandle>;
 }
 
+const STEP_OPEN_FLAGS =
+  typeof fsConstants.O_NOFOLLOW === "number"
+    ? fsConstants.O_RDONLY | fsConstants.O_NOFOLLOW
+    : fsConstants.O_RDONLY;
+
 const defaultFileSystem: InspectionFileSystem = {
   readFile,
   readdir: (directoryPath) => readdir(directoryPath, { withFileTypes: true }),
   lstat,
-  open: (filePath) => open(filePath, "r"),
+  open: (filePath) => open(filePath, STEP_OPEN_FLAGS),
 };
 
 interface ParsedStepRecord extends InspectedStepRecord {
@@ -136,13 +142,21 @@ async function readBoundedFile(
   let handle: ReadableFileHandle | undefined;
   try {
     const initialStats = await fileSystem.lstat(filePath);
-    if (!initialStats.isFile() || initialStats.size > INSPECTION_MAX_STEP_FILE_BYTES) {
+    if (
+      !initialStats.isFile()
+      || initialStats.isSymbolicLink()
+      || initialStats.size > INSPECTION_MAX_STEP_FILE_BYTES
+    ) {
       return { skipped: true };
     }
 
     handle = await fileSystem.open(filePath);
     const openedStats = await handle.stat();
-    if (!openedStats.isFile() || openedStats.size > INSPECTION_MAX_STEP_FILE_BYTES) {
+    if (
+      !openedStats.isFile()
+      || openedStats.isSymbolicLink()
+      || openedStats.size > INSPECTION_MAX_STEP_FILE_BYTES
+    ) {
       return { skipped: true };
     }
 
@@ -185,6 +199,35 @@ export async function inspectSelectedRun(
   }
   if (!isTerminalManifest(manifest, runId)) return { status: "stale" };
 
+  try {
+    const stepsDirStats = await fileSystem.lstat(getRunStepsDir(cwd, runId));
+    if (stepsDirStats.isSymbolicLink()) {
+      return {
+        status: "ready",
+        inspection: {
+          runId,
+          records: [],
+          skippedFileCount: 0,
+          uninspectedFileCount: 0,
+          omittedRecordCount: 0,
+          stepsUnavailable: true,
+        },
+      };
+    }
+  } catch {
+    return {
+      status: "ready",
+      inspection: {
+        runId,
+        records: [],
+        skippedFileCount: 0,
+        uninspectedFileCount: 0,
+        omittedRecordCount: 0,
+        stepsUnavailable: true,
+      },
+    };
+  }
+
   let entries: Dirent[];
   try {
     entries = await fileSystem.readdir(getRunStepsDir(cwd, runId));
@@ -203,7 +246,7 @@ export async function inspectSelectedRun(
   }
 
   const filenames = entries
-    .filter((entry) => entry.isFile() || entry.isSymbolicLink())
+    .filter((entry) => entry.isFile() && !entry.isSymbolicLink())
     .map((entry) => entry.name)
     .sort(compareText);
   const inspectedFilenames = filenames.slice(0, INSPECTION_MAX_STEP_FILES);
