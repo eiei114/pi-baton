@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.9.1] - 2026-10-16
+
+### Changed
+
+- Pin the Pi SDK 1.2.0 development/test toolchain and verify Baton commands in the actual Pi host.
+
 ## [0.9.0] - 2026-10-12
 
 ### Added

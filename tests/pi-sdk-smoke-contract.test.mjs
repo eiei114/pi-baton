@@ -25,7 +25,7 @@ const notification = (message) => ({
   notifyType: "info",
 });
 const observed = (responses = [registration, prompt, notification(NO_HISTORY_MESSAGE)], fullOutput = "", exit_code = 0) =>
-  ({ responses, fullOutput, exit_code, expectedVersion: "1.1.0" });
+  ({ responses, fullOutput, exit_code, expectedVersion: "1.2.0" });
 
 test("behavior contract identifies Pi SDK v2 and parses LF/CRLF JSON records strictly", () => {
   assert.equal(VERIFICATION_CONTRACT, "pi-sdk-behavior-v2");
@@ -107,8 +107,8 @@ test("reload requires second-process registration, feature response, and clean a
 });
 
 test("native shell boundary requires exact pinned CLI version and a zero exit", () => {
-  assert.equal(behaviorAssertions("host_shell", observed([], "1.1.0\r\n"))[0].passed, true);
-  for (const [output, exit_code] of [["", 0], ["11.1.0", 0], ["1.0.0", 0], ["1.1.0", 1]]) {
+  assert.equal(behaviorAssertions("host_shell", observed([], "1.2.0\r\n"))[0].passed, true);
+  for (const [output, exit_code] of [["", 0], ["11.2.0", 0], ["1.1.0", 0], ["1.2.0", 1]]) {
     assert.equal(behaviorAssertions("host_shell", observed([], output, exit_code))[0].passed, false);
   }
 });
