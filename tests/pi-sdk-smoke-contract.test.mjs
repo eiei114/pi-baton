@@ -8,6 +8,7 @@ import {
   parseRpcStdout,
   redactLocalPaths,
   REQUIRED_COMMANDS,
+  reloadProcessAssertion,
   VERIFICATION_CONTRACT,
 } from "../scripts/pi-sdk-smoke-contract.mjs";
 
@@ -25,7 +26,7 @@ const notification = (message) => ({
   notifyType: "info",
 });
 const observed = (responses = [registration, prompt, notification(NO_HISTORY_MESSAGE)], fullOutput = "", exit_code = 0) =>
-  ({ responses, fullOutput, exit_code, expectedVersion: "1.1.0" });
+  ({ responses, fullOutput, exit_code, expectedVersion: "1.2.0" });
 
 test("behavior contract identifies Pi SDK v2 and parses LF/CRLF JSON records strictly", () => {
   assert.equal(VERIFICATION_CONTRACT, "pi-sdk-behavior-v2");
@@ -106,9 +107,23 @@ test("reload requires second-process registration, feature response, and clean a
   }
 });
 
+test("reload lifecycle requires two distinct Pi processes and a clean first shutdown", () => {
+  const first = { process_id: 101, exit_code: 0, passed: true };
+  const second = { process_id: 102, exit_code: 0, passed: true };
+  assert.equal(reloadProcessAssertion(first, second).passed, true);
+  for (const [initial, reloaded] of [
+    [{ ...first, process_id: null }, second],
+    [first, { ...second, process_id: first.process_id }],
+    [{ ...first, exit_code: 1 }, second],
+    [{ ...first, passed: false }, second],
+  ]) {
+    assert.equal(reloadProcessAssertion(initial, reloaded).passed, false);
+  }
+});
+
 test("native shell boundary requires exact pinned CLI version and a zero exit", () => {
-  assert.equal(behaviorAssertions("host_shell", observed([], "1.1.0\r\n"))[0].passed, true);
-  for (const [output, exit_code] of [["", 0], ["11.1.0", 0], ["1.0.0", 0], ["1.1.0", 1]]) {
+  assert.equal(behaviorAssertions("host_shell", observed([], "1.2.0\r\n"))[0].passed, true);
+  for (const [output, exit_code] of [["", 0], ["11.2.0", 0], ["1.1.0", 0], ["1.2.0", 1]]) {
     assert.equal(behaviorAssertions("host_shell", observed([], output, exit_code))[0].passed, false);
   }
 });

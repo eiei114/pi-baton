@@ -8,6 +8,7 @@ import {
   parseJsonLines,
   parseRpcStdout,
   redactLocalPaths,
+  reloadProcessAssertion,
   SDK_NAMES,
   UNHANDLED_ERROR_PATTERN,
   VERIFICATION_CONTRACT,
@@ -24,8 +25,8 @@ const sdkVersions = Object.fromEntries(SDK_NAMES.map((name) => [
   readJson(resolve(root, "node_modules", name, "package.json")).version,
 ]));
 for (const name of SDK_NAMES) {
-  if (manifest.devDependencies?.[name] !== sdkVersions[name] || sdkVersions[name] !== "1.1.0") {
-    throw new Error(`Smoke requires exact Pi SDK 1.1.0 dev/test pins for ${name}; found ${sdkVersions[name]}`);
+  if (manifest.devDependencies?.[name] !== sdkVersions[name] || sdkVersions[name] !== "1.2.0") {
+    throw new Error(`Smoke requires exact Pi SDK 1.2.0 dev/test pins for ${name}; found ${sdkVersions[name]}`);
   }
 }
 
@@ -59,8 +60,8 @@ const rpcArgs = [
   "rpc",
 ];
 
-function runPi(name, messages) {
-  const cwd = resolve(tempRoot, `project-${name}`);
+function runPi(name, messages, { cwdName = name } = {}) {
+  const cwd = resolve(tempRoot, `project-${cwdName}`);
   mkdirSync(cwd, { recursive: true });
   return new Promise((resolveResult) => {
     const child = spawn(process.execPath, [piCli, ...rpcArgs], {
@@ -82,7 +83,10 @@ function runPi(name, messages) {
       settled = true;
       clearTimeout(deadlineTimer);
       clearTimeout(cleanupTimer);
-      resolveResult(evaluate(name, { status, stdout, stderr, error: failure }));
+      resolveResult({
+        ...evaluate(name, { status, stdout, stderr, error: failure }),
+        process_id: child.pid ?? null,
+      });
     };
     const terminateAfterFailure = (error) => {
       if (settled || failure) return;
@@ -183,14 +187,36 @@ function evaluate(name, result) {
 }
 
 try {
+  const firstReloadProcess = await runPi("extension_load", [{ type: "get_commands" }], { cwdName: "reload" });
+  const reloadedProcess = await runPi("reload_cleanup", [
+    { type: "get_commands" },
+    { type: "prompt", message: "/baton:history" },
+  ], { cwdName: "reload" });
+  const reloadLifecycle = reloadProcessAssertion(firstReloadProcess, reloadedProcess);
+  const reloadCase = {
+    ...reloadedProcess,
+    evidence: JSON.stringify({
+      first_process: {
+        process_id: firstReloadProcess.process_id,
+        exit_code: firstReloadProcess.exit_code,
+        output: firstReloadProcess.evidence,
+      },
+      second_process: {
+        process_id: reloadedProcess.process_id,
+        exit_code: reloadedProcess.exit_code,
+        output: reloadedProcess.evidence,
+      },
+    }),
+    assertions: [...reloadedProcess.assertions, reloadLifecycle],
+    passed: firstReloadProcess.passed && reloadedProcess.passed && reloadLifecycle.passed,
+    hasUnhandledError: firstReloadProcess.hasUnhandledError || reloadedProcess.hasUnhandledError,
+    hasLoadError: firstReloadProcess.hasLoadError || reloadedProcess.hasLoadError,
+  };
   const cases = [
     await runPi("extension_load", [{ type: "get_commands" }]),
     await runPi("happy_path", [{ type: "prompt", message: "/baton:history" }]),
     await runPi("error_path", [{ type: "prompt", message: "/baton:run" }]),
-    await runPi("reload_cleanup", [
-      { type: "get_commands" },
-      { type: "prompt", message: "/baton:history" },
-    ]),
+    reloadCase,
     runHostShell(),
   ];
   const report = {
@@ -201,7 +227,7 @@ try {
     model_inference: "none; actual Pi RPC extension commands with offline startup",
     unhandled_errors: cases.filter((item) => item.hasUnhandledError).length,
     extension_load_errors: cases.filter((item) => item.hasLoadError || (item.name === "extension_load" && !item.passed)).length,
-    cases: cases.map(({ hasUnhandledError, hasLoadError, ...item }) => item),
+    cases: cases.map(({ hasUnhandledError, hasLoadError, process_id, ...item }) => item),
   };
   mkdirSync(dirname(reportPath), { recursive: true });
   writeFileSync(reportPath, `${JSON.stringify(report, null, 2)}\n`);
