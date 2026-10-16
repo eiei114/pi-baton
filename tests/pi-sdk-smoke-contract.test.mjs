@@ -8,6 +8,7 @@ import {
   parseRpcStdout,
   redactLocalPaths,
   REQUIRED_COMMANDS,
+  reloadProcessAssertion,
   VERIFICATION_CONTRACT,
 } from "../scripts/pi-sdk-smoke-contract.mjs";
 
@@ -103,6 +104,20 @@ test("reload requires second-process registration, feature response, and clean a
     [[registration, prompt, notification(NO_HISTORY_MESSAGE)], "", 1],
   ]) {
     assert.ok(behaviorAssertions("reload_cleanup", observed(responses, output, exit_code)).some((item) => !item.passed));
+  }
+});
+
+test("reload lifecycle requires two distinct Pi processes and a clean first shutdown", () => {
+  const first = { process_id: 101, exit_code: 0, passed: true };
+  const second = { process_id: 102, exit_code: 0, passed: true };
+  assert.equal(reloadProcessAssertion(first, second).passed, true);
+  for (const [initial, reloaded] of [
+    [{ ...first, process_id: null }, second],
+    [first, { ...second, process_id: first.process_id }],
+    [{ ...first, exit_code: 1 }, second],
+    [{ ...first, passed: false }, second],
+  ]) {
+    assert.equal(reloadProcessAssertion(initial, reloaded).passed, false);
   }
 });
 

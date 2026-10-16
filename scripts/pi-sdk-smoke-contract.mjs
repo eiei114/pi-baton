@@ -46,6 +46,26 @@ export function parseRpcStdout(output) {
   }
 }
 
+export function reloadProcessAssertion(first, second) {
+  const observed = {
+    first_process_id: first?.process_id ?? null,
+    second_process_id: second?.process_id ?? null,
+    first_exit_code: first?.exit_code ?? null,
+    first_passed: first?.passed === true,
+  };
+  const passed = Number.isInteger(observed.first_process_id)
+    && Number.isInteger(observed.second_process_id)
+    && observed.first_process_id !== observed.second_process_id
+    && observed.first_exit_code === 0
+    && observed.first_passed;
+  return assertion(
+    "distinct_reload_processes",
+    "The first Pi host exits cleanly before reload starts in a distinct actual Pi RPC process",
+    observed,
+    passed,
+  );
+}
+
 export function redactLocalPaths(output, paths) {
   let redacted = String(output);
   const variants = new Map();
