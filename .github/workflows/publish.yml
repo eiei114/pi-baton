@@ -92,4 +92,26 @@ jobs:
 
       - name: Publish to npm
         if: steps.published.outputs.skip != 'true'
-        run: npm publish --access public
+        shell: bash
+        run: |
+          # DOT-917: the "Skip already published version" guard above is a
+          # non-atomic check-then-publish. Two runs for the same version (for
+          # example a tag push plus a release.published event) can both pass the
+          # guard and race; the loser then fails with
+          #   403 You cannot publish over the previously published versions: X
+          # after npm registry propagation. Treat only that exact duplicate-version
+          # error as success so the workflow is idempotent. Auth/permission,
+          # network, tarball and every other failure still fail the job.
+          set +e
+          output=$(npm publish --access public 2>&1)
+          status=$?
+          set -e
+          printf '%s\n' "$output"
+          if [ "$status" -eq 0 ]; then
+            exit 0
+          fi
+          if printf '%s' "$output" | grep -Eq 'cannot publish over the previously published versions'; then
+            echo "::notice::Version already published by a concurrent run; treating duplicate-version E403 as success."
+            exit 0
+          fi
+          exit "$status"
