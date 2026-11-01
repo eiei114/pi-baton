@@ -10,6 +10,7 @@ import {
 import { getRunOutputsDir } from "./paths.ts";
 import { resolveStepModel } from "./model-routing.ts";
 import { ReviewContractError, parseStepEnvelope } from "./review-contract.ts";
+import { isTerminalRunState } from "./run-state.ts";
 import { readRunManifest, updateRunState, writeStepRecord } from "./run-store.ts";
 import { loadWorkflowFromPath } from "./workflow-discovery.ts";
 import { isCompleteTransition } from "./workflow-schema.ts";
@@ -160,7 +161,7 @@ async function executeOneStep(
 export async function runContinuous(options: RunEngineOptions): Promise<RunResultSummary> {
   let manifest = await readRunManifest(options.cwd, options.runId);
 
-  if (manifest.state === "completed" || manifest.state === "failed") {
+  if (isTerminalRunState(manifest.state)) {
     throw new Error(`Run ${manifest.id} is terminal (${manifest.state})`);
   }
 

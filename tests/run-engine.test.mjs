@@ -73,6 +73,43 @@ test("runContinuous completes accept path with isolated handoff payload", async 
   }
 });
 
+test("runContinuous rejects completed and failed runs before invoking a step", async () => {
+  const cwd = await mkdtemp(join(tmpdir(), "pi-baton-run-terminal-guard-"));
+  let stepAttempts = 0;
+
+  try {
+    for (const state of ["completed", "failed"]) {
+      const manifest = await createIdleRun(cwd, {
+        workflowId: "default-review-loop",
+        workflowName: "Default Review Loop",
+        workflowPath: join(getPackageWorkflowsDir(), "default-review-loop.yaml"),
+        workflowSource: "builtin",
+        taskBrief: "Terminal guard test",
+        targetDirectory: cwd,
+        entryStep: "implement",
+        iterationCap: 2,
+      });
+      await updateRunState(cwd, manifest.id, { state, currentStep: null });
+
+      await assert.rejects(
+        runContinuous({
+          cwd,
+          runId: manifest.id,
+          stepRunner: async () => {
+            stepAttempts++;
+            return { exitCode: 0, outputText: "unexpected", stderr: "" };
+          },
+        }),
+        { message: `Run ${manifest.id} is terminal (${state})` },
+      );
+    }
+
+    assert.equal(stepAttempts, 0);
+  } finally {
+    await rm(cwd, { recursive: true, force: true });
+  }
+});
+
 test("runContinuous loops fix and fails at iteration cap", async () => {
   const cwd = await mkdtemp(join(tmpdir(), "pi-baton-run-"));
   let reviewCount = 0;

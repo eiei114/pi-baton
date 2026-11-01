@@ -5,6 +5,7 @@ import type { FileHandle } from "node:fs/promises";
 import { join } from "node:path";
 import { getRunManifestPath, getRunStepsDir } from "./paths.ts";
 import { isCompleteRunManifest } from "./run-store.ts";
+import { isTerminalRunState } from "./run-state.ts";
 import type { RunManifest, ReviewJudgment } from "./types.ts";
 
 export const INSPECTION_MAX_STEP_FILES = 100;
@@ -131,7 +132,7 @@ function isTerminalManifest(value: unknown, runId: string): value is RunManifest
   return (
     isCompleteRunManifest(value) &&
     value.id === runId &&
-    (value.state === "completed" || value.state === "failed")
+    isTerminalRunState(value.state)
   );
 }
 

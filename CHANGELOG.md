@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.9.2] - 2026-11-02
+
+### Changed
+
+- Centralize terminal run-state detection across run execution, persistence, inspection, and status summaries.
+- Bump the package version for the published library refactor.
+
 ## [0.9.1] - 2026-10-16
 
 ### Changed

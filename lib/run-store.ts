@@ -8,6 +8,7 @@ import {
   getRunStepsDir,
   getRunsDir,
 } from "./paths.ts";
+import { isTerminalRunState } from "./run-state.ts";
 import type { ActiveRunPointer, RunManifest, RunState, StepRecord } from "./types.ts";
 
 function nowIso(): string {
@@ -40,10 +41,6 @@ export async function readActiveRunPointer(cwd: string): Promise<ActiveRunPointe
 
 export async function readRunManifest(cwd: string, runId: string): Promise<RunManifest> {
   return readJson<RunManifest>(getRunManifestPath(cwd, runId));
-}
-
-function isTerminalRunState(state: RunState): boolean {
-  return state === "completed" || state === "failed";
 }
 
 export async function loadActiveRun(cwd: string): Promise<RunManifest | null> {
