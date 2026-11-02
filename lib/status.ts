@@ -1,9 +1,6 @@
 import type { TerminalRunHistoryResult } from "./run-store.ts";
+import { isTerminalRunState } from "./run-state.ts";
 import type { RunManifest } from "./types.ts";
-
-function isTerminalRunState(state: RunManifest["state"]): boolean {
-  return state === "completed" || state === "failed";
-}
 
 export function formatStatusSummary(manifest: RunManifest): string {
   const lines: string[] = [];
