@@ -10,7 +10,7 @@
 | Field | Value |
 |---|---|
 | Latest release | **0.8.7** |
-| Next planned | **0.9.2** — centralize terminal run-state classification |
+| Next planned | **0.9.3** — Pi SDK 1.3.0 development/test toolchain compatibility |
 | Stability | Early / pre-1.0; surface (`/baton:*` commands + YAML schema) is stabilizing |
 | CI | `npm run ci` green (typecheck + 117 tests + actual Pi SDK smoke + `npm pack --dry-run`) |
 | Security | `npm audit` reports 0 vulnerabilities |

@@ -25,8 +25,9 @@ const sdkVersions = Object.fromEntries(SDK_NAMES.map((name) => [
   readJson(resolve(root, "node_modules", name, "package.json")).version,
 ]));
 for (const name of SDK_NAMES) {
-  if (manifest.devDependencies?.[name] !== sdkVersions[name] || sdkVersions[name] !== "1.2.0") {
-    throw new Error(`Smoke requires exact Pi SDK 1.2.0 dev/test pins for ${name}; found ${sdkVersions[name]}`);
+  const pinnedVersion = manifest.devDependencies?.[name];
+  if (typeof pinnedVersion !== "string" || pinnedVersion !== sdkVersions[name]) {
+    throw new Error(`Smoke requires an exact package.json dev/test pin for ${name}; expected ${pinnedVersion ?? "missing"}, found ${sdkVersions[name]}`);
   }
 }
 

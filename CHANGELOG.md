@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.9.3] - 2026-11-02
+
+### Changed
+
+- Update the Pi SDK 1.3.0 development/test toolchain and derive smoke expectations from the exact manifest pins.
+- Bump the package version for the Pi SDK toolchain update.
+
 ## [0.9.2] - 2026-11-02
 
 ### Changed
