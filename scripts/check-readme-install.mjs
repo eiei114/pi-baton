@@ -5,9 +5,13 @@
  * `tests/smoke.test.mjs` can only compare README against this tree's
  * package.json, so it stays green while a copied `pi install npm:pi-baton@x.y.z`
  * specifier is still unpublished (a version bump merged to `main` is not
- * published by itself; `auto-release.yml` runs only on explicit maintainer
- * dispatch, see docs/release.md). This script closes that gap by asking the npm
- * registry whether the pinned version actually resolves.
+ * published by itself; a maintainer-controlled release action is required, see
+ * docs/release.md). This script closes that gap by asking the npm registry
+ * whether the pinned version actually resolves.
+ *
+ * The decision itself lives in `readme-install-contract.mjs`
+ * (`evaluatePinnedInstall`), so the offline tests exercise the same code path
+ * that a 404 or a package-name mismatch takes here.
  *
  * The check needs network access, so it is a separate opt-in script and is not
  * part of `npm run ci`. It never publishes, tags or mutates the registry.
@@ -21,7 +25,7 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
-import { labelsVersionAsUnpublished, parsePinnedInstall } from "./readme-install-contract.mjs";
+import { evaluatePinnedInstall, parsePinnedInstall } from "./readme-install-contract.mjs";
 
 const root = resolve(import.meta.dirname, "..");
 const readme = readFileSync(resolve(root, "README.md"), "utf8");
@@ -34,12 +38,25 @@ if (!pinned) {
 }
 
 const { packageName, version: pinnedVersion } = pinned;
-const registry = (process.env.PI_BATON_REGISTRY ?? "https://registry.npmjs.org").replace(/\/+$/, "");
-const url = `${registry}/${packageName}/${pinnedVersion}`;
 const rows = [
   `README pinned   : ${packageName}@${pinnedVersion}`,
   `package.json    : ${manifest.name}@${manifest.version}`,
 ];
+
+// Reject a pin for another package before touching the network: the same version
+// can exist for a different package, so a 200 would validate a command that
+// installs the wrong package.
+if (packageName !== manifest.name) {
+  rows.push(
+    `result          : FAIL, README pins ${packageName} but package.json is ${manifest.name}`,
+    "action          : pin the package this repository publishes",
+  );
+  console.error(rows.join("\n"));
+  process.exit(1);
+}
+
+const registry = (process.env.PI_BATON_REGISTRY ?? "https://registry.npmjs.org").replace(/\/+$/, "");
+const url = `${registry}/${packageName}/${pinnedVersion}`;
 
 let status;
 try {
@@ -55,20 +72,20 @@ try {
 
 rows.push(`registry probe  : ${url} -> HTTP ${status}`);
 
-if (status === 200) {
-  rows.push("result          : OK, the documented pinned install command resolves on npm");
+const verdict = evaluatePinnedInstall({ readme, manifest, status });
+
+if (verdict.ok) {
+  rows.push(
+    verdict.reason === "labeled-unpublished"
+      ? "result          : OK, pinned version is unpublished and README labels it as not yet installable"
+      : "result          : OK, the documented pinned install command resolves on npm",
+  );
   console.log(rows.join("\n"));
   process.exit(0);
 }
 
-if (status === 404 && labelsVersionAsUnpublished(readme, pinnedVersion)) {
-  rows.push("result          : OK, pinned version is unpublished and README labels it as not yet installable");
-  console.log(rows.join("\n"));
-  process.exit(0);
-}
-
+rows.push(`result          : FAIL, ${packageName}@${pinnedVersion} does not resolve on npm (HTTP ${status})`);
 rows.push(
-  `result          : FAIL, ${packageName}@${pinnedVersion} does not resolve on npm (HTTP ${status})`,
   pinnedVersion === manifest.version
     ? "action          : label the version as not yet published in README, or pin the newest published version"
     : "action          : pin the newest published version in README",
