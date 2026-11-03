@@ -39,8 +39,14 @@ pi install npm:pi-baton
 Pin a specific version when you want reproducible installs:
 
 ```bash
-pi install npm:pi-baton@0.9.3
+pi install npm:pi-baton@0.9.2
 ```
+
+`0.9.2` is the newest version published on npm. The next release, `0.9.3`, is
+prepared in [`CHANGELOG.md`](CHANGELOG.md) but is **not yet published**: it becomes
+installable only after a maintainer explicitly dispatches the release workflow
+(see [`docs/release.md`](docs/release.md)). Until then, pin `@0.9.2` or omit the
+version.
 
 Install into the current project instead of your user Pi settings:
 
@@ -166,7 +172,11 @@ npm version patch
 git push
 ```
 
-On `main`, version bumps trigger auto-release and publish workflows. See [`docs/release.md`](docs/release.md) for setup details.
+Merging a version bump to `main` does **not** release or publish it: nothing is
+published until a maintainer explicitly dispatches `.github/workflows/auto-release.yml`
+on `main`. Until then the new version is not installable from npm, so keep the
+pinned install example above on the newest published version. See
+[`docs/release.md`](docs/release.md) for the release flow and requirements.
 
 ## Security
 

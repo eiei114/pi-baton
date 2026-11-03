@@ -1,6 +1,11 @@
 # Changelog
 
-## [0.9.3] - 2026-11-04
+## [0.9.3] - not yet released
+
+> `0.9.3` is not published on npm yet. It becomes installable only after a
+> maintainer explicitly dispatches the release workflow (see
+> [`docs/release.md`](docs/release.md)); merging this version bump does not
+> publish it. Until then the newest installable version is `0.9.2`.
 
 ### Changed
 

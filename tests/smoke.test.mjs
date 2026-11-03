@@ -4,6 +4,8 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import test from "node:test";
 
+import { labelsVersionAsUnpublished, parsePinnedInstall } from "../scripts/readme-install-contract.mjs";
+
 const packageJson = JSON.parse(await readFile(new URL("../package.json", import.meta.url), "utf8"));
 const readme = await readFile(new URL("../README.md", import.meta.url), "utf8");
 const workflowsGuide = await readFile(new URL("../docs/workflows.md", import.meta.url), "utf8");
@@ -41,10 +43,38 @@ test("package uses public publish config", () => {
   assert.equal(packageJson.publishConfig.access, "public");
 });
 
-test("README pinned install example matches package version", () => {
-  const match = readme.match(/pi install npm:pi-baton@(\d+\.\d+\.\d+)/);
-  assert.ok(match, "README should include a pinned npm install example");
-  assert.equal(match[1], packageJson.version);
+test("README pinned install example is installable or labeled as not yet published", () => {
+  const pinned = parsePinnedInstall(readme);
+  assert.ok(pinned, "README should include a pinned npm install example");
+
+  if (pinned.version === packageJson.version) return;
+
+  // A version bump merged to main is not published by itself: auto-release.yml
+  // runs only on explicit maintainer dispatch (docs/release.md). A pinned example
+  // that differs from this tree's version therefore copies an unreleased
+  // specifier, so README must label package.json's version as not yet installable
+  // instead of presenting the copied command as working.
+  assert.ok(
+    labelsVersionAsUnpublished(readme, packageJson.version),
+    "README pins a version other than package.json, so it must label package.json's version as not yet published",
+  );
+
+  // Negative controls for the label matcher itself: the label must be a standalone
+  // version mention next to an unpublished marker, so a passing test cannot be an
+  // artifact of substring matching.
+  assert.equal(labelsVersionAsUnpublished("pin pi-baton@0.9.3", "0.9.3"), false);
+  assert.equal(labelsVersionAsUnpublished("pi-baton@10.9.3 is upcoming", "0.9.3"), false);
+  assert.equal(labelsVersionAsUnpublished("0.9.30 is upcoming", "0.9.3"), false);
+  assert.equal(labelsVersionAsUnpublished("0.9.3 is\nupcoming", "0.9.3"), true);
+});
+
+test("README release section does not claim a merged version bump publishes itself", () => {
+  // docs/release.md and auto-release.yml (guarded above) require an explicit
+  // maintainer dispatch; README must not promise an automatic release, because
+  // that claim is what makes an unpublished pinned example look installable.
+  assert.doesNotMatch(readme, /version bumps? trigger auto-release/i);
+  assert.match(readme, /does \*\*not\*\* release or publish it/);
+  assert.match(readme, /explicitly dispatches `\.github\/workflows\/auto-release\.yml`/);
 });
 
 test("README quick start documents terminal run fallback for /baton:status", () => {
