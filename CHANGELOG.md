@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.9.3] - 2026-11-04
+
+### Changed
+
+- Make `/baton:inspect` step-summary formatting near-linear in record count instead of quadratic, without changing its output. The output budget is now charged per record block instead of re-joining and re-counting the whole accumulated buffer for every record, and code-point counting and truncation no longer allocate an index array per call or risk splitting a surrogate pair.
+- Bump the package version for the published library performance fix.
+
 ## [0.9.2] - 2026-11-02
 
 ### Changed

@@ -290,8 +290,34 @@ export async function inspectSelectedRun(
   };
 }
 
+const SURROGATE_PATTERN = /[\uD800-\uDFFF]/;
+
+/** Counts code points without allocating an index array; Array.from built one per call. */
 function codePointLength(value: string): number {
-  return Array.from(value).length;
+  let count = 0;
+  for (let index = 0; index < value.length; index++) {
+    if (isSurrogatePairAt(value, index)) index++;
+    count++;
+  }
+  return count;
+}
+
+/** Cuts a string after `max` code points, never splitting a surrogate pair. */
+function sliceCodePoints(value: string, max: number): string {
+  let count = 0;
+  for (let index = 0; index < value.length; index++) {
+    if (count === max) return value.slice(0, index);
+    if (isSurrogatePairAt(value, index)) index++;
+    count++;
+  }
+  return value;
+}
+
+function isSurrogatePairAt(value: string, index: number): boolean {
+  const high = value.charCodeAt(index);
+  if (high < 0xd800 || high > 0xdbff || index + 1 >= value.length) return false;
+  const low = value.charCodeAt(index + 1);
+  return low >= 0xdc00 && low <= 0xdfff;
 }
 
 function normalizeText(value: string): { text: string; truncated: boolean } {
@@ -299,12 +325,20 @@ function normalizeText(value: string): { text: string; truncated: boolean } {
     .replace(/[\u0000-\u001F\u007F-\u009F]/g, " ")
     .replace(/\s+/g, " ")
     .trim();
-  const points = Array.from(normalized);
-  if (points.length <= INSPECTION_MAX_TEXT_CODE_POINTS) {
+
+  // Without surrogate pairs the UTF-16 length is already the code point length.
+  if (!SURROGATE_PATTERN.test(normalized)) {
+    if (normalized.length <= INSPECTION_MAX_TEXT_CODE_POINTS) {
+      return { text: normalized, truncated: false };
+    }
+    return { text: normalized.slice(0, INSPECTION_MAX_TEXT_CODE_POINTS), truncated: true };
+  }
+
+  if (codePointLength(normalized) <= INSPECTION_MAX_TEXT_CODE_POINTS) {
     return { text: normalized, truncated: false };
   }
   return {
-    text: points.slice(0, INSPECTION_MAX_TEXT_CODE_POINTS).join(""),
+    text: sliceCodePoints(normalized, INSPECTION_MAX_TEXT_CODE_POINTS),
     truncated: true,
   };
 }
@@ -313,7 +347,14 @@ function boundedCount(value: number): string {
   return value > 999_999 ? "999999+" : String(value);
 }
 
-function stepLines(record: InspectedStepRecord): { lines: string[]; shortenedTextCount: number } {
+interface StepLineBlock {
+  lines: string[];
+  /** Code points of the lines themselves; the caller adds one separator per line. */
+  codePoints: number;
+  shortenedTextCount: number;
+}
+
+function stepLines(record: InspectedStepRecord): StepLineBlock {
   const normalizedName = normalizeText(record.stepName);
   const normalizedSummary = normalizeText(record.summary);
   let shortenedTextCount = Number(normalizedName.truncated) + Number(normalizedSummary.truncated);
@@ -336,11 +377,17 @@ function stepLines(record: InspectedStepRecord): { lines: string[]; shortenedTex
     lines.push(`  acceptance note: ${normalizedNote.text}`);
   }
 
-  return { lines, shortenedTextCount };
+  let codePoints = 0;
+  for (const line of lines) codePoints += codePointLength(line);
+
+  return { lines, codePoints, shortenedTextCount };
 }
 
 export function formatRunInspection(inspection: RunInspection): string {
   const lines = [`Step summaries for run ${inspection.runId}:`];
+  const outputBudget = INSPECTION_MAX_OUTPUT_CODE_POINTS - OUTPUT_DIAGNOSTIC_RESERVE;
+  // Tracked incrementally: re-joining the whole buffer on every record was quadratic.
+  let currentLength = codePointLength(lines[0]);
   let omittedFindingCount = 0;
   let shortenedTextCount = 0;
   let outputOmittedRecordCount = 0;
@@ -355,14 +402,14 @@ export function formatRunInspection(inspection: RunInspection): string {
     for (let index = 0; index < inspection.records.length; index++) {
       const record = inspection.records[index];
       const block = stepLines(record);
-      const currentLength = codePointLength(lines.join("\n"));
-      const blockLength = codePointLength(block.lines.join("\n")) + 1;
-      if (currentLength + blockLength > INSPECTION_MAX_OUTPUT_CODE_POINTS - OUTPUT_DIAGNOSTIC_RESERVE) {
+      const blockLength = block.codePoints + block.lines.length;
+      if (currentLength + blockLength > outputBudget) {
         outputOmittedRecordCount = inspection.records.length - index;
         break;
       }
 
       lines.push(...block.lines);
+      currentLength += blockLength;
       shortenedTextCount += block.shortenedTextCount;
       if (record.judgment === "reject" && record.findings) {
         omittedFindingCount += Math.max(0, record.findings.length - INSPECTION_MAX_FINDINGS_PER_STEP);
@@ -377,9 +424,8 @@ export function formatRunInspection(inspection: RunInspection): string {
 
   // The reserved diagnostic space makes this a defensive final guard, including Unicode code points.
   const output = lines.join("\n");
-  const points = Array.from(output);
-  if (points.length <= INSPECTION_MAX_OUTPUT_CODE_POINTS) return output;
-  return points.slice(0, INSPECTION_MAX_OUTPUT_CODE_POINTS).join("");
+  if (codePointLength(output) <= INSPECTION_MAX_OUTPUT_CODE_POINTS) return output;
+  return sliceCodePoints(output, INSPECTION_MAX_OUTPUT_CODE_POINTS);
 }
 
 export function formatRunInspectionChoice(manifest: RunManifest, index: number): string {
