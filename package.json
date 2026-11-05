@@ -1,6 +1,6 @@
 {
   "name": "pi-baton",
-  "version": "0.9.2",
+  "version": "0.9.3",
   "description": "Pi-native workflow baton runner with per-step model switching and isolated step context.",
   "type": "module",
   "engines": {
@@ -40,6 +40,7 @@
     "test": "node --test tests/*.test.mjs",
     "ci": "npm run typecheck && npm test && npm run smoke:pi && npm run pack:check",
     "pack:check": "npm pack --dry-run",
+    "check:readme-install": "node scripts/check-readme-install.mjs",
     "smoke:pi": "node scripts/pi-sdk-smoke.mjs"
   },
   "pi": {

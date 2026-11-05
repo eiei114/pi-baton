@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.9.3] - not yet released
+
+> `0.9.3` is not published on npm yet. It becomes installable only after a
+> maintainer completes a documented, maintainer-controlled release action (see
+> [`docs/release.md`](docs/release.md)); merging this version bump does not
+> publish it. Until then the newest installable version is `0.9.2`.
+
+### Changed
+
+- Make `/baton:inspect` step-summary formatting near-linear in record count instead of quadratic, without changing its output. The output budget is now charged per record block instead of re-joining and re-counting the whole accumulated buffer for every record, and code-point counting and truncation no longer allocate an index array per call or risk splitting a surrogate pair.
+- Bump the package version for the published library performance fix.
+- Harden the README install contract: the pinned example must name this package, the pinned version token is captured whole (prerelease and build metadata included), and an "unpublished" label only classifies the version mention it describes, so a 404 on the pinned version can no longer be reported as success.
+
 ## [0.9.2] - 2026-11-02
 
 ### Changed
