@@ -42,8 +42,8 @@ Pin a specific version when you want reproducible installs:
 pi install npm:pi-baton@0.9.2
 ```
 
-`0.9.2` is the newest version published on npm. The next release, `0.9.3`, is
-prepared in [`CHANGELOG.md`](CHANGELOG.md) but is **not yet published**: it becomes
+`0.9.2` is the newest version published on npm. The next releases, `0.9.3` and `0.9.4`,
+are prepared in [`CHANGELOG.md`](CHANGELOG.md) but are **not yet published**: they become
 installable only after a maintainer completes one of the maintainer-controlled
 release actions in [`docs/release.md`](docs/release.md) — explicitly dispatching
 `.github/workflows/auto-release.yml`, pushing a `v*.*.*` tag, publishing a GitHub

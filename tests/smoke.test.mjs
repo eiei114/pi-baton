@@ -169,8 +169,10 @@ test("README release section does not claim a merged version bump publishes itse
     assert.match(readme, path, `README should document the release path ${path}`);
   }
 
-  // The published pin guidance stays in place.
-  assert.match(readme, /pi install npm:pi-baton@0\.9\.2/);
+  // The pinned install example stays in place. Its version is checked through the
+  // shared contract above rather than a fixed literal, so advancing the pin after a
+  // release does not break the test.
+  assert.ok(parsePinnedInstall(readme), "README should keep a pinned install example");
 });
 
 test("README quick start documents terminal run fallback for /baton:status", () => {
