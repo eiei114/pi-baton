@@ -3,6 +3,7 @@ import { constants as fsConstants } from "node:fs";
 import { access, mkdir, mkdtemp, open, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { performance } from "node:perf_hooks";
 import test from "node:test";
 
 const { default: registerBaton } = await import("../extensions/index.ts");
@@ -522,4 +523,123 @@ test("text normalization uses Unicode code points and output, finding, and text 
   const firstFinding = output.split("\n").find((line) => line.includes("finding:"));
   assert.ok(firstFinding);
   assert.ok(Array.from(firstFinding.slice(firstFinding.indexOf("finding:") + "finding:".length).trim()).length <= INSPECTION_MAX_TEXT_CODE_POINTS);
+});
+
+test("the output budget is charged incrementally per record block", () => {
+  // Equivalence guard for the incremental running total: output stays under the cap and the
+  // omitted-record count stays exact at the boundary. Paired with the scaling test below,
+  // which is the one that fails when the running total is recomputed from the whole buffer.
+  const summary = "s".repeat(INSPECTION_MAX_TEXT_CODE_POINTS);
+  const recordFor = (index) => ({
+    filename: `${index}.json`,
+    stepName: "implement",
+    iteration: index,
+    summary,
+  });
+  const build = (count) => ({
+    runId: "20261012000000-budget",
+    records: Array.from({ length: count }, (_, index) => recordFor(index)),
+    skippedFileCount: 0,
+    uninspectedFileCount: 0,
+    omittedRecordCount: 0,
+    stepsUnavailable: false,
+  });
+
+  // Derive the per-record block cost from two populated renderings so the empty-records
+  // recovery message cannot distort the arithmetic.
+  const lengthFor = (count) => Array.from(formatRunInspection(build(count))).length;
+  const perRecordLength = lengthFor(2) - lengthFor(1);
+  assert.ok(perRecordLength > 0);
+  const fits = Math.floor(INSPECTION_MAX_OUTPUT_CODE_POINTS / perRecordLength);
+
+  const fullOutput = formatRunInspection(build(fits));
+  assert.equal(Array.from(fullOutput).length <= INSPECTION_MAX_OUTPUT_CODE_POINTS, true);
+  const keptFull = fullOutput.match(/step: implement/g)?.length ?? 0;
+  assert.ok(keptFull > 1, "several records must survive at the derived boundary");
+  assert.match(fullOutput, new RegExp(`records omitted=${fits - keptFull}`));
+
+  const overflowOutput = formatRunInspection(build(fits + 20));
+  const kept = overflowOutput.match(/step: implement/g)?.length ?? 0;
+  assert.ok(kept > 0, "at least one record must survive");
+  assert.ok(kept < fits + 20, "the overflowing records must be omitted");
+  assert.match(overflowOutput, new RegExp(`records omitted=${fits + 20 - kept}`));
+  assert.ok(Array.from(overflowOutput).length <= INSPECTION_MAX_OUTPUT_CODE_POINTS);
+});
+
+test("formatting cost stays near-linear in record count", () => {
+  // Guards the quadratic regression this change removed: the previous implementation
+  // re-joined the accumulated output and rebuilt a code-point array for every record.
+  // A near-linear implementation lands around 4-6x for a 5x record increase; the
+  // quadratic path measured 15-20x. The threshold sits between the two with margin.
+  const build = (count) => ({
+    runId: "20261012000000-scaling",
+    records: Array.from({ length: count }, (_, index) => ({
+      filename: `${index}.json`,
+      stepName: `step-${index}`,
+      iteration: index,
+      summary: "s".repeat(60),
+    })),
+    skippedFileCount: 0,
+    uninspectedFileCount: 0,
+    omittedRecordCount: 0,
+    stepsUnavailable: false,
+  });
+
+  const measure = (inspection, iterations) => {
+    const start = performance.now();
+    let sink = 0;
+    for (let index = 0; index < iterations; index++) {
+      sink += formatRunInspection(inspection).length;
+    }
+    if (sink < 0) throw new Error("unreachable");
+    return performance.now() - start;
+  };
+
+  const small = build(10);
+  const large = build(50);
+  // Warm up so the ratio is not dominated by first-call JIT work.
+  measure(small, 50);
+  measure(large, 50);
+
+  const ratios = [];
+  for (let round = 0; round < 5; round++) {
+    const smallMs = measure(small, 400);
+    const largeMs = measure(large, 400);
+    ratios.push(largeMs / smallMs);
+  }
+  ratios.sort((a, b) => a - b);
+  const medianRatio = ratios[Math.floor(ratios.length / 2)];
+
+  assert.ok(
+    medianRatio < 10,
+    `formatting 5x the records took ${medianRatio.toFixed(2)}x the time; near-linear is ~5x and the removed quadratic path was ~15-20x`,
+  );
+});
+
+test("code-point counting never splits a surrogate pair at the text cap", () => {
+  const emoji = "\uD83D\uDE00";
+  // 241 code points of astral text must truncate to exactly 240 whole code points.
+  const output = formatRunInspection({
+    runId: "20261012000000-astral",
+    records: [
+      {
+        filename: "0.json",
+        stepName: "implement",
+        iteration: 0,
+        summary: emoji.repeat(INSPECTION_MAX_TEXT_CODE_POINTS + 1),
+      },
+    ],
+    skippedFileCount: 0,
+    uninspectedFileCount: 0,
+    omittedRecordCount: 0,
+    stepsUnavailable: false,
+  });
+
+  const summaryLine = output.split("\n").find((line) => line.includes("summary:"));
+  assert.ok(summaryLine);
+  const body = summaryLine.slice(summaryLine.indexOf("summary:") + "summary:".length).trim();
+  assert.equal(Array.from(body).length, INSPECTION_MAX_TEXT_CODE_POINTS);
+  assert.equal(body, emoji.repeat(INSPECTION_MAX_TEXT_CODE_POINTS));
+  // A split pair would leave a lone surrogate, which is not valid well-formed Unicode.
+  assert.doesNotMatch(body, /[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/);
 });
