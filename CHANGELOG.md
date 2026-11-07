@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.9.3] - 2026-11-07
+
+### Changed
+
+- Pin the Pi SDK 1.5.0 development/test toolchain and verify the extension in the actual Pi host.
+- Bump the package version for the Pi SDK compatibility update; public peer ranges remain unchanged.
+
 ## [0.9.2] - 2026-11-02
 
 ### Changed

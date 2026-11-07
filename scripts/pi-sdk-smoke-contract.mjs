@@ -11,6 +11,7 @@ export const REQUIRED_COMMANDS = [
   "baton:run",
   "baton:status",
   "baton:history",
+  "baton:inspect",
 ];
 export const NO_HISTORY_MESSAGE =
   "No completed or failed Baton runs yet. Start one with /baton:start, then /baton:run.";
@@ -112,7 +113,7 @@ function featureNotification(responses, expectedMessage) {
 export function behaviorAssertions(name, { responses, fullOutput, exit_code, expectedVersion }) {
   const registration = commandRegistration(responses);
   if (name === "extension_load") {
-    return [assertion("extension_registered", "The actual Pi RPC host lists all five Baton extension commands",
+    return [assertion("extension_registered", "The actual Pi RPC host lists all six Baton extension commands",
       registration.registered, registration.passed)];
   }
   if (name === "happy_path") {
@@ -129,7 +130,7 @@ export function behaviorAssertions(name, { responses, fullOutput, exit_code, exp
     const feature = featureNotification(responses, NO_HISTORY_MESSAGE);
     const clean = exit_code === 0 && !UNHANDLED_ERROR_PATTERN.test(fullOutput);
     return [
-      assertion("reloaded_extension_registered", "The second actual Pi process registers all Baton commands",
+      assertion("reloaded_extension_registered", "The second actual Pi process registers all six Baton commands",
         registration.registered, registration.passed),
       assertion("reloaded_feature_response", "The second process handles `/baton:history` and returns its actual notice",
         { prompt: feature.prompt, notification: feature.notification }, feature.passed),

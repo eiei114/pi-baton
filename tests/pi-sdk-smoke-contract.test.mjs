@@ -26,7 +26,7 @@ const notification = (message) => ({
   notifyType: "info",
 });
 const observed = (responses = [registration, prompt, notification(NO_HISTORY_MESSAGE)], fullOutput = "", exit_code = 0) =>
-  ({ responses, fullOutput, exit_code, expectedVersion: "1.2.0" });
+  ({ responses, fullOutput, exit_code, expectedVersion: "1.5.0" });
 
 test("behavior contract identifies Pi SDK v2 and parses LF/CRLF JSON records strictly", () => {
   assert.equal(VERIFICATION_CONTRACT, "pi-sdk-behavior-v2");
@@ -61,7 +61,7 @@ test("evidence redaction removes workspace paths in native and JSON-style separa
   );
 });
 
-test("extension registration requires all five commands from actual extension sources", () => {
+test("extension registration requires all six commands from actual extension sources", () => {
   assert.equal(behaviorAssertions("extension_load", observed())[0].passed, true);
   for (const commands of [[], REQUIRED_COMMANDS.slice(1).map((name) => ({ name, source: "extension" })),
     REQUIRED_COMMANDS.map((name) => ({ name, source: "prompt" }))]) {
@@ -122,8 +122,8 @@ test("reload lifecycle requires two distinct Pi processes and a clean first shut
 });
 
 test("native shell boundary requires exact pinned CLI version and a zero exit", () => {
-  assert.equal(behaviorAssertions("host_shell", observed([], "1.2.0\r\n"))[0].passed, true);
-  for (const [output, exit_code] of [["", 0], ["11.2.0", 0], ["1.1.0", 0], ["1.2.0", 1]]) {
+  assert.equal(behaviorAssertions("host_shell", observed([], "1.5.0\r\n"))[0].passed, true);
+  for (const [output, exit_code] of [["", 0], ["11.2.0", 0], ["1.4.0", 0], ["1.5.0", 1]]) {
     assert.equal(behaviorAssertions("host_shell", observed([], output, exit_code))[0].passed, false);
   }
 });
