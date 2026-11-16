@@ -1,11 +1,19 @@
 # Changelog
 
-## [0.9.4] - not yet released
+## [0.9.5] - not yet released
 
-> `0.9.4` is not published on npm yet. It becomes installable only after a
+> `0.9.5` is not published on npm yet. It becomes installable only after a
 > maintainer completes a documented, maintainer-controlled release action (see
 > [`docs/release.md`](docs/release.md)); merging this version bump does not
-> publish it. Until then the newest installable version is `0.9.2`.
+> publish it. Until then the newest installable version is `0.9.4`.
+
+### Changed
+
+- Move the Pi SDK development/test pins to the 1.5.2 wave and verify the extension in the actual Pi 1.5.2 host; public peer ranges remain unchanged.
+- Read the expected SDK wave from the `package.json` pins in the smoke harness instead of a hard-coded `1.5.0`, so an SDK pin bump no longer fails the harness after the pins and installed packages already agree.
+- Bump the package version for the Pi SDK compatibility update.
+
+## [0.9.4] - 2026-11-07
 
 ### Changed
 

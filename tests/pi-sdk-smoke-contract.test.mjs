@@ -9,6 +9,8 @@ import {
   redactLocalPaths,
   REQUIRED_COMMANDS,
   reloadProcessAssertion,
+  SDK_NAMES,
+  sdkPinMismatch,
   VERIFICATION_CONTRACT,
 } from "../scripts/pi-sdk-smoke-contract.mjs";
 
@@ -119,6 +121,30 @@ test("reload lifecycle requires two distinct Pi processes and a clean first shut
   ]) {
     assert.equal(reloadProcessAssertion(initial, reloaded).passed, false);
   }
+});
+
+test("smoke gate reads the SDK wave from the manifest pins instead of a literal", () => {
+  const installedAt = (version) => Object.fromEntries(SDK_NAMES.map((name) => [name, version]));
+  assert.equal(sdkPinMismatch({ devDependencies: installedAt("1.5.2") }, installedAt("1.5.2")), null,
+    "a pinned wave that matches the installed packages must pass, whatever its version");
+
+  // A literal wave in the harness made every Dependabot bump of the pi-sdk group
+  // fail even when the manifest and node_modules already agreed.
+  assert.equal(sdkPinMismatch({ devDependencies: installedAt("9.9.9") }, installedAt("9.9.9")), null,
+    "the gate must not depend on one specific SDK version");
+
+  const drifted = sdkPinMismatch({ devDependencies: { ...installedAt("1.5.2"), [SDK_NAMES[0]]: "1.5.0" } }, installedAt("1.5.2"));
+  assert.match(drifted, new RegExp(`${SDK_NAMES[0]} to match its package.json pin 1.5.0; found 1.5.2`));
+
+  const missingPin = installedAt("1.5.2");
+  delete missingPin[SDK_NAMES[1]];
+  assert.match(sdkPinMismatch({ devDependencies: missingPin }, installedAt("1.5.2")),
+    new RegExp(`exact Pi SDK dev/test pin for ${SDK_NAMES[1]}`));
+
+  const notInstalled = installedAt("1.5.2");
+  delete notInstalled[SDK_NAMES[2]];
+  assert.match(sdkPinMismatch({ devDependencies: installedAt("1.5.2") }, notInstalled),
+    new RegExp(`pinned Pi SDK ${SDK_NAMES[2]} 1.5.2 to be installed`));
 });
 
 test("native shell boundary requires exact pinned CLI version and a zero exit", () => {
