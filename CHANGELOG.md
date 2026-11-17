@@ -13,6 +13,7 @@
 - Bump the package version for the published library performance fix.
 - Harden the README install contract: the pinned example must name this package, the pinned version token is captured whole (prerelease and build metadata included), and an "unpublished" label only classifies the version mention it describes, so a 404 on the pinned version can no longer be reported as success.
 - Fail a workflow run with an actionable error when a step model placeholder cannot be resolved from its session or agent.
+- Treat a placeholder `model` in agent frontmatter as unresolved (like a missing agent model) and name the agent frontmatter in the error and configuration guidance.
 - Bump the package version for the published workflow execution fix.
 
 ## [0.9.3] - 2026-11-07

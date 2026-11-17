@@ -315,6 +315,69 @@ steps:
   }
 });
 
+test("runContinuous fails clearly when the agent model is a placeholder", async () => {
+  const cwd = await mkdtemp(join(tmpdir(), "pi-baton-run-agent-placeholder-"));
+  let stepAttempts = 0;
+  const workflowPath = join(cwd, "agent-placeholder.yaml");
+
+  try {
+    await mkdir(join(cwd, ".pi", "agents"), { recursive: true });
+    await writeFile(
+      join(cwd, ".pi", "agents", "placeholder-model-worker.md"),
+      "---\nname: placeholder-model-worker\ndescription: Worker whose model is a placeholder\nmodel: <your-strong-model>\n---\n",
+      "utf8",
+    );
+    await writeFile(
+      workflowPath,
+      `name: Agent Placeholder Test
+iteration_cap: 1
+steps:
+  implement:
+    agent: placeholder-model-worker
+    model: <your-strong-model>
+    prompt: Implement.
+    on_accept: _complete
+    on_reject: implement
+`,
+      "utf8",
+    );
+
+    const manifest = await createIdleRun(cwd, {
+      workflowId: "agent-placeholder",
+      workflowName: "Agent Placeholder Test",
+      workflowPath,
+      workflowSource: "user",
+      taskBrief: "Agent placeholder test",
+      targetDirectory: cwd,
+      entryStep: "implement",
+      iterationCap: 1,
+    });
+
+    const summary = await runContinuous({
+      cwd,
+      runId: manifest.id,
+      stepRunner: async () => {
+        stepAttempts++;
+        return { exitCode: 0, outputText: workerOutput("unexpected"), stderr: "" };
+      },
+    });
+
+    assert.equal(summary.state, "failed");
+    assert.match(summary.failureReason ?? "", /Step "implement"/);
+    assert.match(summary.failureReason ?? "", /agent "placeholder-model-worker"/);
+    assert.match(summary.failureReason ?? "", /placeholder "<your-strong-model>"/);
+    assert.match(summary.failureReason ?? "", /agent frontmatter/);
+    assert.equal(stepAttempts, 0);
+
+    const finalManifest = await readRunManifest(cwd, manifest.id);
+    assert.equal(finalManifest.state, "failed");
+    assert.equal(finalManifest.currentStep, "implement");
+    assert.equal(finalManifest.failureReason, summary.failureReason);
+  } finally {
+    await rm(cwd, { recursive: true, force: true });
+  }
+});
+
 test("runContinuous fails on review contract violation", async () => {
   const cwd = await mkdtemp(join(tmpdir(), "pi-baton-run-"));
 

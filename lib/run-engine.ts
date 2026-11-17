@@ -117,14 +117,17 @@ async function executeOneStep(
 
   const handoff = buildHandoff(stepName, manifest, previousEnvelope);
   const prompt = buildStepPrompt(step.prompt, handoff);
+  const agent = findAgent(manifest.targetDirectory, step.agent);
+  const agentModel = agent?.model?.trim();
+  const hasConcreteAgentModel = Boolean(agentModel) && !isModelPlaceholder(agentModel);
   if (
     isModelPlaceholder(step.model) &&
     !options.sessionModel &&
-    !findAgent(manifest.targetDirectory, step.agent)?.model
+    !hasConcreteAgentModel
   ) {
     throw new Error(
       `Step "${stepName}" (agent "${step.agent}") has unresolved model placeholder "${step.model}". ` +
-        "Set a real model in the workflow YAML or select a session model with /model.",
+        "Set a real model in the workflow YAML, set `model` in the agent frontmatter, or select a session model with /model.",
     );
   }
   const model = resolveStepModel(step.model, options.sessionModel);
