@@ -43,7 +43,7 @@ pi install npm:pi-baton@0.9.2
 ```
 
 Release status snapshot as of 2026-11-08 (refresh it when a release is published):
-`0.9.2` is the newest version published on npm. The next releases, `0.9.3` and `0.9.4`,
+`0.9.2` is the newest version published on npm. The next releases, `0.9.3`, `0.9.4`, and `0.9.5`,
 are prepared in [`CHANGELOG.md`](CHANGELOG.md) but are **not yet published**: they become
 installable only after a maintainer completes one of the maintainer-controlled
 release actions in [`docs/release.md`](docs/release.md) — explicitly dispatching

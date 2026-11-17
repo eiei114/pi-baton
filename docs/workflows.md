@@ -118,6 +118,8 @@ Each step may set an optional `model` field (`provider/model-id`, e.g. `openai/g
 | Step omits `model` | Current Pi session model |
 | Scaffold placeholder (`<your-fast-model>`) | Current Pi session model |
 
+If a step still has a model placeholder and neither the current session nor its agent defines a model, the run fails with an error naming the step, agent, and placeholder. Set a real model in the workflow YAML or select a session model with `/model`.
+
 Convention: use a faster model on worker/linear steps and a stronger model on review steps. `/baton:new` inserts placeholders as a reminder — replace them with real model IDs or remove them to inherit the session model.
 
 Step-level overrides apply per subagent invocation; other steps in the same run can use different models.

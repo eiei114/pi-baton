@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdtemp, readdir, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
@@ -247,6 +247,69 @@ steps:
     });
 
     assert.deepEqual(models, ["openai/gpt-fast", "anthropic/session-model"]);
+  } finally {
+    await rm(cwd, { recursive: true, force: true });
+  }
+});
+
+test("runContinuous fails clearly when a model placeholder has no session or agent model", async () => {
+  const cwd = await mkdtemp(join(tmpdir(), "pi-baton-run-unresolved-model-"));
+  let stepAttempts = 0;
+  const workflowPath = join(cwd, "unresolved-model.yaml");
+
+  try {
+    await mkdir(join(cwd, ".pi", "agents"), { recursive: true });
+    await writeFile(
+      join(cwd, ".pi", "agents", "placeholder-worker.md"),
+      "---\nname: placeholder-worker\ndescription: Worker without a model\n---\n",
+      "utf8",
+    );
+    await writeFile(
+      workflowPath,
+      `name: Unresolved Model Test
+iteration_cap: 1
+steps:
+  implement:
+    agent: placeholder-worker
+    model: <your-strong-model>
+    prompt: Implement.
+    on_accept: _complete
+    on_reject: implement
+`,
+      "utf8",
+    );
+
+    const manifest = await createIdleRun(cwd, {
+      workflowId: "unresolved-model",
+      workflowName: "Unresolved Model Test",
+      workflowPath,
+      workflowSource: "user",
+      taskBrief: "Unresolved model test",
+      targetDirectory: cwd,
+      entryStep: "implement",
+      iterationCap: 1,
+    });
+
+    const summary = await runContinuous({
+      cwd,
+      runId: manifest.id,
+      stepRunner: async () => {
+        stepAttempts++;
+        return { exitCode: 0, outputText: workerOutput("unexpected"), stderr: "" };
+      },
+    });
+
+    assert.equal(summary.state, "failed");
+    assert.match(summary.failureReason ?? "", /Step "implement"/);
+    assert.match(summary.failureReason ?? "", /agent "placeholder-worker"/);
+    assert.match(summary.failureReason ?? "", /placeholder "<your-strong-model>"/);
+    assert.match(summary.failureReason ?? "", /select a session model with \/model/);
+    assert.equal(stepAttempts, 0);
+
+    const finalManifest = await readRunManifest(cwd, manifest.id);
+    assert.equal(finalManifest.state, "failed");
+    assert.equal(finalManifest.currentStep, "implement");
+    assert.equal(finalManifest.failureReason, summary.failureReason);
   } finally {
     await rm(cwd, { recursive: true, force: true });
   }
