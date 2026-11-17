@@ -5,6 +5,7 @@ import * as path from "node:path";
 import type { Message } from "@earendil-works/pi-ai";
 import { withFileMutationQueue } from "@earendil-works/pi-coding-agent";
 import { findAgent } from "./agents.ts";
+import { isModelPlaceholder } from "./workflow-scaffold.ts";
 import type { StepExecutionRequest, StepExecutionResult, StepRunner } from "./types.ts";
 
 function getPiInvocation(args: string[]): { command: string; args: string[] } {
@@ -58,7 +59,9 @@ export function createSubagentRunner(): StepRunner {
 
     const args: string[] = ["--mode", "json", "-p", "--no-session"];
 
-    const model = request.model ?? agent.model;
+    const requestedModel = request.model && !isModelPlaceholder(request.model) ? request.model : undefined;
+    const agentModel = agent.model && !isModelPlaceholder(agent.model) ? agent.model : undefined;
+    const model = requestedModel ?? agentModel;
     if (model) {
       args.push("--model", model);
     }

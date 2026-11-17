@@ -1,8 +1,8 @@
 # Changelog
 
-## [0.9.4] - not yet released
+## [0.9.5] - not yet released
 
-> `0.9.4` is not published on npm yet. It becomes installable only after a
+> `0.9.5` is not published on npm yet. It becomes installable only after a
 > maintainer completes a documented, maintainer-controlled release action (see
 > [`docs/release.md`](docs/release.md)); merging this version bump does not
 > publish it. Until then the newest installable version is `0.9.2`.
@@ -12,6 +12,9 @@
 - Make `/baton:inspect` step-summary formatting near-linear in record count instead of quadratic, without changing its output. The output budget is now charged per record block instead of re-joining and re-counting the whole accumulated buffer for every record, and code-point counting and truncation no longer allocate an index array per call or risk splitting a surrogate pair.
 - Bump the package version for the published library performance fix.
 - Harden the README install contract: the pinned example must name this package, the pinned version token is captured whole (prerelease and build metadata included), and an "unpublished" label only classifies the version mention it describes, so a 404 on the pinned version can no longer be reported as success.
+- Fail a workflow run with an actionable error when a step model placeholder cannot be resolved from its session or agent.
+- Treat a placeholder `model` in agent frontmatter as unresolved (like a missing agent model) and name the agent frontmatter in the error and configuration guidance.
+- Bump the package version for the published workflow execution fix.
 
 ## [0.9.3] - 2026-11-07
 
