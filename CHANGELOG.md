@@ -11,7 +11,9 @@
 
 - Move the Pi SDK development/test pins to the 1.5.2 wave and verify the extension in the actual Pi 1.5.2 host; public peer ranges remain unchanged.
 - Read the expected SDK wave from the `package.json` pins in the smoke harness instead of a hard-coded `1.5.0`, so an SDK pin bump no longer fails the harness after the pins and installed packages already agree.
-- Bump the package version for the Pi SDK compatibility update.
+- Fail a workflow run with an actionable error when a step model placeholder cannot be resolved from its session or agent.
+- Treat a placeholder `model` in agent frontmatter as unresolved (like a missing agent model) and name the agent frontmatter in the error and configuration guidance.
+- Bump the package version for the Pi SDK compatibility update and workflow execution fix.
 
 ## [0.9.4] - 2026-11-07
 
@@ -20,6 +22,9 @@
 - Make `/baton:inspect` step-summary formatting near-linear in record count instead of quadratic, without changing its output. The output budget is now charged per record block instead of re-joining and re-counting the whole accumulated buffer for every record, and code-point counting and truncation no longer allocate an index array per call or risk splitting a surrogate pair.
 - Bump the package version for the published library performance fix.
 - Harden the README install contract: the pinned example must name this package, the pinned version token is captured whole (prerelease and build metadata included), and an "unpublished" label only classifies the version mention it describes, so a 404 on the pinned version can no longer be reported as success.
+- Fail a workflow run with an actionable error when a step model placeholder cannot be resolved from its session or agent.
+- Treat a placeholder `model` in agent frontmatter as unresolved (like a missing agent model) and name the agent frontmatter in the error and configuration guidance.
+- Bump the package version for the published workflow execution fix.
 
 ## [0.9.3] - 2026-11-07
 

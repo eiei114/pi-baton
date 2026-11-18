@@ -1,7 +1,7 @@
-# Roadmap
+﻿# Roadmap
 
 > Living planning doc for **pi-baton**. The weekly maintenance seed planner reads the
-> [Maintenance seed backlog](#maintenance-seed-backlog) section to spawn 30–90 minute
+> [Maintenance seed backlog](#maintenance-seed-backlog) section to spawn 30 — 0 minute
 > micro tasks. Edit this file as the project evolves; it is the single source of truth
 > for "what's next."
 
@@ -10,19 +10,19 @@
 | Field | Value |
 |---|---|
 | Latest release | **0.9.4** |
-| Next planned | **0.9.5** — Pi SDK 1.5.2 compatibility and runtime verification |
+| Next planned | **0.9.5** — Pi SDK 1.5.2 compatibility and clearer unresolved step-model placeholder errors |
 | Stability | Early / pre-1.0; surface (`/baton:*` commands + YAML schema) is stabilizing |
-| CI | `npm run ci` green (typecheck + 124 tests + actual Pi SDK smoke + `npm pack --dry-run`) |
+| CI | `npm run ci` green (typecheck + 126 tests + actual Pi SDK smoke + `npm pack --dry-run`) |
 | Security | `npm audit` reports 0 vulnerabilities |
 | npm publishing | npm Trusted Publishing (OIDC), no `NPM_TOKEN` |
 
-Release cadence so far: 0.1.0 → 0.7.5 across ~30 days. Template cleanup and
-authoring docs ([S-101](#s-101)–[S-109](#s-109)) are largely complete; the near-term
+Release cadence so far: 0.1.0 竊・0.7.5 across ~30 days. Template cleanup and
+authoring docs ([S-101](#s-101)窶甜S-109](#s-109)) are largely complete; the near-term
 focus is **engine edge-case tests**, **dependabot queue hygiene**, and **run lifecycle UX**.
 
 ## What pi-baton is
 
-Pi Baton is a Pi-native **workflow baton runner**. Define `implement → review → fix`
+Pi Baton is a Pi-native **workflow baton runner**. Define `implement 竊・review 竊・fix`
 loops in YAML; pi-baton executes them with automatic baton handoff between isolated
 subagent steps, per-step model switching, a structured `accept`/`reject` review
 contract, and a live progress widget.
@@ -35,7 +35,7 @@ contract, and a live progress widget.
 | `lib/` | Workflow parser, schema validation, run engine, run store and inspection, subagent runner, review contract, model routing, UI widget, status formatter |
 | `agents/` | Builtin `worker` and `reviewer` subagent definitions |
 | `workflows/*.yaml` | Builtin workflows (default review loop and two-stage review gauntlet) |
-| `tests/*.test.mjs` | 124 tests (engine, store, schema, discovery, scaffold, widget, status, history, inspection, agents, commands, handoff, kebab-case, model-routing, review-contract, extension-registration, Pi SDK smoke contract, smoke) |
+| `tests/*.test.mjs` | 126 tests (engine, store, schema, discovery, scaffold, widget, status, history, inspection, agents, commands, handoff, kebab-case, model-routing, review-contract, extension-registration, Pi SDK smoke contract, smoke) |
 
 ### Architecture in one paragraph
 
@@ -64,9 +64,9 @@ The roadmap source is present and has been refreshed against the current `main` 
 These candidates are already recorded in the maintenance backlog below; no
 implementation or release action is part of this roadmap refresh.
 
-## Near-term direction (next 2–3 releases)
+## Near-term direction (next 2 — releases)
 
-### 0.5.0 → 0.7.0 — Shipped
+### 0.5.0 竊・0.7.0 — Shipped
 
 - 0.5.0: Run engine, step persistence, terminal run summaries.
 - 0.6.0: Structured step envelopes, handoff payloads, review contract enforcement, model routing.
@@ -96,8 +96,8 @@ Make finished and past runs easier to inspect from the command surface.
 ## Maintenance seed backlog
 
 Each entry below is a **candidate maintenance seed** — a bounded, independently
-shippable micro task. Seeds are sized **S** (≈30 min), **M** (≈45–60 min),
-**L** (≈75–90 min). The weekly seed planner may pick any `ready` seed; pick top-down
+shippable micro task. Seeds are sized **S** (竕・0 min), **M** (竕・5 — 0 min),
+**L** (竕・5 — 0 min). The weekly seed planner may pick any `ready` seed; pick top-down
 when there is no other signal.
 
 <a id="s-101"></a>
@@ -199,7 +199,7 @@ merge or close, and collapse where they conflict.
 `actions/checkout-7`) can rot if left.
 
 **Acceptance criteria.**
-- [x] PR #14 (`@earendil-works/pi-ai` 0.78.1 → 0.80.2) reviewed and merged (CI green: typecheck + 57 tests pass).
+- [x] PR #14 (`@earendil-works/pi-ai` 0.78.1 竊・0.80.2) reviewed and merged (CI green: typecheck + 57 tests pass).
 - [x] Post-merge `npm run ci` green on `main`.
 - [x] No `peerDependencies` range changes needed (all imports are `import type` only).
 
@@ -251,7 +251,7 @@ thing that bites later.
 ### S-108 — Add a second builtin workflow (non-review shape) `[done]` `L` `feature`
 
 **What.** Add a second workflow under `workflows/` that demonstrates a shape other than
-the review loop — e.g. a pure linear `draft → refine → polish` pipeline, or a
+the review loop — e.g. a pure linear `draft 竊・refine 竊・polish` pipeline, or a
 two-reviewer gauntlet — so users see that pi-baton is not hard-wired to one loop.
 
 **Why.** The README sells "per-step model switching" and "isolated step context" as
@@ -322,7 +322,7 @@ weeks becomes a merge-conflict magnet on a fast-moving Pi toolchain.
 - [ ] Post-merge `npm run ci` green on `main` (if merged).
 - [ ] ROADMAP/CHANGELOG updated only if the bump changes documented toolchain pins.
 
-**Route hint.** Dependency hygiene seed. ~30–45 min. Human may need to approve merge.
+**Route hint.** Dependency hygiene seed. ~30 — 5 min. Human may need to approve merge.
 
 ---
 
@@ -342,7 +342,7 @@ paths tend to regress silently when Pi CLI flags or process spawning change.
 - [ ] `npm run ci` green.
 - [ ] No production behavior change unless a bug is found and fixed.
 
-**Route hint.** Test-only seed. ~45–60 min. `pr_required`.
+**Route hint.** Test-only seed. ~45 — 0 min. `pr_required`.
 
 ---
 
@@ -364,7 +364,7 @@ called out in ROADMAP themes.
 - [x] README and `docs/workflows.md` cross-link updated.
 - [x] CHANGELOG entry.
 
-**Route hint.** UX feature seed. ~75–90 min. Promote after [S-111](#s-111)–[S-112](#s-112). `pr_required`.
+**Route hint.** UX feature seed. ~75 — 0 min. Promote after [S-111](#s-111)窶甜S-112](#s-112). `pr_required`.
 
 ---
 
@@ -383,7 +383,7 @@ errors reduce trial-and-error during `/baton:start` and `/baton:run`.
 - [ ] Tests cover at least one unresolved placeholder path.
 - [ ] README or `docs/workflows.md` mentions the improved error briefly if user-facing copy changes.
 
-**Route hint.** Small UX polish from the 0.9.0 lifecycle theme. ~30–45 min. `pr_required`.
+**Route hint.** Small UX polish from the 0.9.0 lifecycle theme. ~30 — 5 min. `pr_required`.
 
 ---
 
@@ -410,6 +410,7 @@ errors reduce trial-and-error during `/baton:start` and `/baton:run`.
    state.
 2. Include **What / Why / Acceptance criteria / Route hint** so an agent can pick it up
    with no extra context.
-3. Keep seeds 30–90 minutes. If a seed grows past that, split it.
+3. Keep seeds 30 — 0 minutes. If a seed grows past that, split it.
 4. When a seed ships, move it to a `## Shipped` log at the bottom (append-only) rather
    than deleting it — the history helps future planning.
+

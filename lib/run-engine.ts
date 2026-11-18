@@ -1,6 +1,7 @@
 import { writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import type { Model } from "@earendil-works/pi-ai";
+import { findAgent } from "./agents.ts";
 import {
   buildFixHandoff,
   buildImplementHandoff,
@@ -14,6 +15,7 @@ import { isTerminalRunState } from "./run-state.ts";
 import { readRunManifest, updateRunState, writeStepRecord } from "./run-store.ts";
 import { loadWorkflowFromPath } from "./workflow-discovery.ts";
 import { isCompleteTransition } from "./workflow-schema.ts";
+import { isModelPlaceholder } from "./workflow-scaffold.ts";
 import type { RunProgressUpdate } from "./run-widget.ts";
 import type {
   RunManifest,
@@ -115,6 +117,19 @@ async function executeOneStep(
 
   const handoff = buildHandoff(stepName, manifest, previousEnvelope);
   const prompt = buildStepPrompt(step.prompt, handoff);
+  const agent = findAgent(manifest.targetDirectory, step.agent);
+  const agentModel = agent?.model?.trim();
+  const hasConcreteAgentModel = Boolean(agentModel) && !isModelPlaceholder(agentModel);
+  if (
+    isModelPlaceholder(step.model) &&
+    !options.sessionModel &&
+    !hasConcreteAgentModel
+  ) {
+    throw new Error(
+      `Step "${stepName}" (agent "${step.agent}") has unresolved model placeholder "${step.model}". ` +
+        "Set a real model in the workflow YAML, set `model` in the agent frontmatter, or select a session model with /model.",
+    );
+  }
   const model = resolveStepModel(step.model, options.sessionModel);
   const startedAt = new Date().toISOString();
   const iteration = manifest.iteration;
