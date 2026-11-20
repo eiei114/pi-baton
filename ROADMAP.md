@@ -53,12 +53,9 @@ active-run guard so a new run can start.
 The roadmap source is present and has been refreshed against the current `main` branch
 (release `0.8.6`). The next bounded maintenance candidates are:
 
-1. **S-111 — Triage the Dependabot npm-dev-minor-patch batch**: review PR #49 and
-   merge or close it with a rationale; this is the highest-priority dependency-hygiene
-   item and may require human approval.
-2. **S-112 — Add subagent abort propagation coverage**: exercise cancellation of an
+1. **S-112 — Add subagent abort propagation coverage**: exercise cancellation of an
    in-flight step without changing production behavior unless the test exposes a bug.
-3. **S-114 — Improve unresolved step-model errors**: make placeholder failures name the
+2. **S-114 — Improve unresolved step-model errors**: make placeholder failures name the
    step, agent, and unresolved model so custom workflow authors can act on them.
 
 These candidates are already recorded in the maintenance backlog below; no
@@ -74,11 +71,10 @@ implementation or release action is part of this roadmap refresh.
 
 ### 0.8.0 — Engine hardening + hygiene (completed focus)
 
-Template cleanup and authoring docs are done; remaining seeds target thinner test
-coverage and dependency freshness:
+Template cleanup and authoring docs are done; remaining 0.8.0 seeds target thinner test
+coverage:
 
 - iteration_cap exhaustion coverage ([S-110](#s-110)) — done.
-- Dependabot npm-dev-minor-patch batch ([S-111](#s-111)).
 - subagent-runner abort propagation ([S-112](#s-112)).
 
 ### 0.9.0 — Run lifecycle UX
@@ -308,21 +304,19 @@ a gap.
 ---
 
 <a id="s-111"></a>
-### S-111 — Triage dependabot npm-dev-minor-patch batch `[ready]` `S` `deps`
+### S-111 — Triage dependabot npm-dev-minor-patch batch `[done]` `S` `deps`
 
-**What.** Review open PR #49 (`npm-dev-minor-patch` group: `@earendil-works/pi-ai` and
-`@earendil-works/pi-coding-agent` bumps). Merge if CI green and no breaking API changes,
-or close with a documented rationale if blocked.
-
-**Why.** The dependabot queue should stay near-zero; a two-package dev bump left open for
-weeks becomes a merge-conflict magnet on a fast-moving Pi toolchain.
+**Disposition.** PR #49 was closed unmerged on 2026-09-07. Its exact
+`@earendil-works/pi-ai` and `@earendil-works/pi-coding-agent` bumps (0.84.1 to 0.84.4)
+were merged later in PR #55 on 2026-09-11. Further updates to those packages were merged
+in PR #73 (0.99.1 to 0.99.2) and PR #90 (1.5.0 to 1.5.2); PR #89 also refreshed
+`@types/node` on 2026-11-15. The stale PR #49 no longer had outstanding changes to apply,
+so this seed is closed without merging it.
 
 **Acceptance criteria.**
-- [ ] PR #49 merged or closed with rationale recorded in the PR comment.
-- [ ] Post-merge `npm run ci` green on `main` (if merged).
-- [ ] ROADMAP/CHANGELOG updated only if the bump changes documented toolchain pins.
-
-**Route hint.** Dependency hygiene seed. ~30 — 5 min. Human may need to approve merge.
+- [x] PR #49 closed unmerged with the superseding merged dependency updates recorded here.
+- [x] S-111 removed from the ready queue and no longer blocks later seeds.
+- [x] No release, tag, publish, or publish-workflow changes.
 
 ---
 
@@ -364,7 +358,7 @@ called out in ROADMAP themes.
 - [x] README and `docs/workflows.md` cross-link updated.
 - [x] CHANGELOG entry.
 
-**Route hint.** UX feature seed. ~75 — 0 min. Promote after [S-111](#s-111)窶甜S-112](#s-112). `pr_required`.
+**Route hint.** UX feature seed. ~75 — 0 min. `pr_required`.
 
 ---
 
