@@ -5,6 +5,35 @@ export const SDK_NAMES = [
   "@earendil-works/pi-coding-agent",
   "@earendil-works/pi-tui",
 ];
+/**
+ * Error message when the installed Pi SDK packages disagree with the exact
+ * development/test pins in `package.json`, or `null` when they match.
+ *
+ * The expected wave is read from the manifest rather than written into the
+ * harness, so a Dependabot bump of the SDK group only touches the pins: a
+ * hard-coded literal here fails the whole smoke run on every bump, even though
+ * the installed packages and the manifest already agree.
+ * @param {{ devDependencies?: Record<string, string> }} manifest
+ * @param {Record<string, string | undefined>} installed
+ * @returns {string | null}
+ */
+export function sdkPinMismatch(manifest, installed) {
+  for (const name of SDK_NAMES) {
+    const pinned = manifest.devDependencies?.[name];
+    const actual = installed[name];
+    if (!pinned) {
+      return `Smoke requires an exact Pi SDK dev/test pin for ${name} in package.json; found none`;
+    }
+    if (!actual) {
+      return `Smoke requires the pinned Pi SDK ${name} ${pinned} to be installed; found nothing`;
+    }
+    if (pinned !== actual) {
+      return `Smoke requires the installed Pi SDK ${name} to match its package.json pin ${pinned}; found ${actual}`;
+    }
+  }
+  return null;
+}
+
 export const REQUIRED_COMMANDS = [
   "baton:new",
   "baton:start",

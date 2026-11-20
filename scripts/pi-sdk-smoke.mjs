@@ -10,6 +10,7 @@ import {
   redactLocalPaths,
   reloadProcessAssertion,
   SDK_NAMES,
+  sdkPinMismatch,
   UNHANDLED_ERROR_PATTERN,
   VERIFICATION_CONTRACT,
 } from "./pi-sdk-smoke-contract.mjs";
@@ -24,11 +25,8 @@ const sdkVersions = Object.fromEntries(SDK_NAMES.map((name) => [
   name,
   readJson(resolve(root, "node_modules", name, "package.json")).version,
 ]));
-for (const name of SDK_NAMES) {
-  if (manifest.devDependencies?.[name] !== sdkVersions[name] || sdkVersions[name] !== "1.5.0") {
-    throw new Error(`Smoke requires exact Pi SDK 1.5.0 dev/test pins for ${name}; found ${sdkVersions[name]}`);
-  }
-}
+const pinMismatch = sdkPinMismatch(manifest, sdkVersions);
+if (pinMismatch) throw new Error(pinMismatch);
 
 const codingAgentDir = resolve(root, "node_modules/@earendil-works/pi-coding-agent");
 const piManifest = readJson(resolve(codingAgentDir, "package.json"));
