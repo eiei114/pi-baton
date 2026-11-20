@@ -15,6 +15,10 @@
 - Treat a placeholder `model` in agent frontmatter as unresolved (like a missing agent model) and name the agent frontmatter in the error and configuration guidance.
 - Bump the package version for the Pi SDK compatibility update and workflow execution fix.
 
+### Fixed
+
+- Send the SIGKILL fallback to an aborted subagent that ignores SIGTERM. The old check used `proc.killed`, which is already true once SIGTERM is delivered, so the fallback never ran. The kill timer and abort listener are now released when the subagent exits.
+
 ## [0.9.4] - 2026-11-07
 
 ### Changed
