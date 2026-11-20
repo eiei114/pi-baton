@@ -279,11 +279,14 @@ test("ROADMAP marks shipped workflow authoring guide seed as done", async () => 
   assert.doesNotMatch(s109, /^- \[ \]/m);
 });
 
-test("ROADMAP lists at least three ready maintenance seed candidates", async () => {
+test("ROADMAP lists the remaining ready maintenance seed candidates", async () => {
   const roadmap = await readFile(new URL("../ROADMAP.md", import.meta.url), "utf8");
   const readySeeds = roadmap.match(/^### S-\d+ — .* `\[ready\]`.*$/gm) ?? [];
 
-  assert.ok(readySeeds.length >= 3, "ROADMAP should list at least three ready maintenance seeds");
+  assert.ok(readySeeds.length >= 2, "ROADMAP should list at least two ready maintenance seeds");
+  assert.match(roadmap, /^### S-111 — .* `\[done\]`/m);
+  assert.doesNotMatch(roadmap, /^### S-111 — .* `\[ready\]`/m);
+  assert.doesNotMatch(roadmap, /Promote after [^\n]*S-111/i);
   for (const seed of readySeeds) {
     assert.match(seed, /`(S|M|L)`/, "each ready seed should declare a size");
   }
