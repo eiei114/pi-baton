@@ -1,4 +1,4 @@
-import { spawn } from "node:child_process";
+import { type ChildProcess, spawn, type SpawnOptions } from "node:child_process";
 import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
@@ -46,7 +46,21 @@ async function writePromptToTempFile(agentName: string, prompt: string): Promise
   return { dir: tmpDir, filePath };
 }
 
-export function createSubagentRunner(): StepRunner {
+/** Minimal child-process surface used by the subagent runner. */
+export type SubagentProcess = Pick<ChildProcess, "stdout" | "stderr" | "kill" | "on">;
+
+export interface SubagentRunnerOptions {
+  /** Process spawner; defaults to node:child_process spawn. Injectable for tests. */
+  spawnProcess?: (command: string, args: string[], options: SpawnOptions) => SubagentProcess;
+  /** Grace period between SIGTERM and the SIGKILL fallback after an abort. */
+  killGraceMs?: number;
+}
+
+const DEFAULT_KILL_GRACE_MS = 5000;
+
+export function createSubagentRunner(options: SubagentRunnerOptions = {}): StepRunner {
+  const spawnProcess = options.spawnProcess ?? ((command, args, spawnOptions) => spawn(command, args, spawnOptions));
+  const killGraceMs = options.killGraceMs ?? DEFAULT_KILL_GRACE_MS;
   return async (request: StepExecutionRequest): Promise<StepExecutionResult> => {
     const agent = findAgent(request.cwd, request.agent);
     if (!agent) {
@@ -89,13 +103,40 @@ export function createSubagentRunner(): StepRunner {
 
       const exitCode = await new Promise<number>((resolve) => {
         const invocation = getPiInvocation(args);
-        const proc = spawn(invocation.command, invocation.args, {
+        const proc = spawnProcess(invocation.command, invocation.args, {
           cwd: request.cwd,
           shell: false,
           stdio: ["ignore", "pipe", "pipe"],
         });
 
         let buffer = "";
+        // `proc.killed` only reports that a signal was delivered, not that the
+        // process exited, so track the actual exit for the SIGKILL fallback.
+        let exited = false;
+        let killTimer: ReturnType<typeof setTimeout> | undefined;
+
+        const onAbort = () => {
+          if (exited) return;
+          proc.kill("SIGTERM");
+          if (killTimer || exited) return;
+          killTimer = setTimeout(() => {
+            killTimer = undefined;
+            if (!exited) proc.kill("SIGKILL");
+          }, killGraceMs);
+        };
+
+        const markExited = () => {
+          exited = true;
+          if (killTimer) {
+            clearTimeout(killTimer);
+            killTimer = undefined;
+          }
+        };
+
+        const cleanup = () => {
+          markExited();
+          request.signal?.removeEventListener("abort", onAbort);
+        };
 
         const processLine = (line: string) => {
           if (!line.trim()) return;
@@ -114,33 +155,33 @@ export function createSubagentRunner(): StepRunner {
           }
         };
 
-        proc.stdout.on("data", (data) => {
+        proc.stdout?.on("data", (data) => {
           buffer += data.toString();
           const lines = buffer.split("\n");
           buffer = lines.pop() || "";
           for (const line of lines) processLine(line);
         });
 
-        proc.stderr.on("data", (data) => {
+        proc.stderr?.on("data", (data) => {
           stderr += data.toString();
         });
 
+        proc.on("exit", markExited);
+
         proc.on("close", (code) => {
+          cleanup();
           if (buffer.trim()) processLine(buffer);
           resolve(code ?? 0);
         });
 
-        proc.on("error", () => resolve(1));
+        proc.on("error", () => {
+          cleanup();
+          resolve(1);
+        });
 
         if (request.signal) {
-          const kill = () => {
-            proc.kill("SIGTERM");
-            setTimeout(() => {
-              if (!proc.killed) proc.kill("SIGKILL");
-            }, 5000);
-          };
-          if (request.signal.aborted) kill();
-          else request.signal.addEventListener("abort", kill, { once: true });
+          if (request.signal.aborted) onAbort();
+          else request.signal.addEventListener("abort", onAbort, { once: true });
         }
       });
 
