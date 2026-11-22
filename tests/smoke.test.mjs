@@ -279,11 +279,17 @@ test("ROADMAP marks shipped workflow authoring guide seed as done", async () => 
   assert.doesNotMatch(s109, /^- \[ \]/m);
 });
 
-test("ROADMAP lists the remaining ready maintenance seed candidates", async () => {
+test("ROADMAP marks shipped S-112 and S-114 done and keeps ready seeds well-formed", async () => {
   const roadmap = await readFile(new URL("../ROADMAP.md", import.meta.url), "utf8");
   const readySeeds = roadmap.match(/^### S-\d+ — .* `\[ready\]`.*$/gm) ?? [];
 
-  assert.ok(readySeeds.length >= 2, "ROADMAP should list at least two ready maintenance seeds");
+  for (const id of ["112", "114"]) {
+    assert.match(roadmap, new RegExp(`^### S-${id} — .* \`\\[done\\]\``, "m"));
+    assert.doesNotMatch(roadmap, new RegExp(`^### S-${id} — .* \`\\[ready\\]\``, "m"));
+    const section = roadmap.match(new RegExp(`<a id="s-${id}"></a>[\\s\\S]*?(?=\\n---)`))?.[0];
+    assert.ok(section, `S-${id} section should exist`);
+    assert.doesNotMatch(section, /^- \[ \]/m);
+  }
   assert.match(roadmap, /^### S-111 — .* `\[done\]`/m);
   assert.doesNotMatch(roadmap, /^### S-111 — .* `\[ready\]`/m);
   assert.doesNotMatch(roadmap, /Promote after [^\n]*S-111/i);

@@ -9,8 +9,8 @@
 
 | Field | Value |
 |---|---|
-| Latest release | **0.9.4** |
-| Next planned | **0.9.5** — Pi SDK 1.5.2 compatibility and clearer unresolved step-model placeholder errors |
+| Latest published release | **0.9.4** (git tag `v0.9.4`) |
+| Next planned | **0.9.5** — prepared in `package.json` but not yet published (Pi SDK 1.5.2 compatibility and unresolved step-model placeholder errors already on `main`). Release stays a manual, owner-gated workflow. |
 | Stability | Early / pre-1.0; surface (`/baton:*` commands + YAML schema) is stabilizing |
 | CI | `npm run ci` green (typecheck + 131 tests + actual Pi SDK smoke + `npm pack --dry-run`) |
 | Security | `npm audit` reports 0 vulnerabilities |
@@ -51,15 +51,10 @@ active-run guard so a new run can start.
 ## Roadmap review — 2026-W41
 
 The roadmap source is present and has been refreshed against the current `main` branch
-(release `0.8.6`). The next bounded maintenance candidates are:
-
-1. **S-112 — Add subagent abort propagation coverage**: exercise cancellation of an
-   in-flight step without changing production behavior unless the test exposes a bug.
-2. **S-114 — Improve unresolved step-model errors**: make placeholder failures name the
-   step, agent, and unresolved model so custom workflow authors can act on them.
-
-These candidates are already recorded in the maintenance backlog below; no
-implementation or release action is part of this roadmap refresh.
+(release `0.8.6`). The bounded maintenance candidates at that time were
+[S-112](#s-112) (subagent abort propagation coverage) and [S-114](#s-114) (unresolved
+step-model errors). Both have since shipped on `main` and are marked done in the
+maintenance backlog below; no ready candidates from this review remain.
 
 ## Near-term direction (next 2 — releases)
 
@@ -75,14 +70,14 @@ Template cleanup and authoring docs are done; remaining 0.8.0 seeds target thinn
 coverage:
 
 - iteration_cap exhaustion coverage ([S-110](#s-110)) — done.
-- subagent-runner abort propagation ([S-112](#s-112)).
+- subagent-runner abort propagation ([S-112](#s-112)) — done.
 
 ### 0.9.0 — Run lifecycle UX
 
 Make finished and past runs easier to inspect from the command surface.
 
 - `/baton:history` for recent terminal runs ([S-113](#s-113)) — done in 0.8.0.
-- Optional: clearer missing-model error messages when a step `model` placeholder is unresolved ([S-114](#s-114)).
+- Clearer missing-model error messages when a step `model` placeholder is unresolved ([S-114](#s-114)) — done on `main` (package version 0.9.5, not yet published).
 
 > Releases are driven by merged work, not calendar dates. Items move up or down as
 > seeds land; this section is a directional guide, not a commitment.
@@ -321,7 +316,7 @@ so this seed is closed without merging it.
 ---
 
 <a id="s-112"></a>
-### S-112 — subagent-runner abort signal propagation test `[ready]` `M` `test`
+### S-112 — subagent-runner abort signal propagation test `[done]` `M` `test`
 
 **What.** Add a unit test that verifies an in-flight `StepRunner` created by
 `createSubagentStepRunner` terminates promptly when `request.signal` aborts mid-step.
@@ -331,10 +326,15 @@ have no dedicated test.
 **Why.** Abort propagation is a correctness edge for long-running steps; untested kill
 paths tend to regress silently when Pi CLI flags or process spawning change.
 
+**Disposition.** Shipped in PR #92 (DOT-3727). `tests/subagent-runner.test.mjs` covers
+SIGTERM propagation on abort, an already-aborted signal, the SIGKILL fallback when the
+subagent ignores SIGTERM, SIGKILL timer release after a clean exit, and abort after the
+subagent finished. The PR also fixed the SIGKILL fallback in `lib/subagent-runner.ts`.
+
 **Acceptance criteria.**
-- [ ] New test in `tests/` exercising abort during a mocked or slow step.
-- [ ] `npm run ci` green.
-- [ ] No production behavior change unless a bug is found and fixed.
+- [x] New test in `tests/` exercising abort during a mocked or slow step.
+- [x] `npm run ci` green.
+- [x] Production behavior change limited to the SIGKILL fallback bug the tests exposed.
 
 **Route hint.** Test-only seed. ~45 — 0 min. `pr_required`.
 
@@ -363,7 +363,7 @@ called out in ROADMAP themes.
 ---
 
 <a id="s-114"></a>
-### S-114 — Clearer unresolved step model placeholder errors `[ready]` `S` `ux`
+### S-114 — Clearer unresolved step model placeholder errors `[done]` `S` `ux`
 
 **What.** When a workflow step references an unresolved `<your-*-model>` placeholder,
 surface a clearer Baton error that names the step, agent, and placeholder value instead of
@@ -372,10 +372,15 @@ a generic model-resolution failure.
 **Why.** Custom workflow authoring is the main path to misconfigured models; clearer
 errors reduce trial-and-error during `/baton:start` and `/baton:run`.
 
+**Disposition.** Shipped in PR #91 (DOT-3728). `lib/run-engine.ts` fails the run with an
+error naming the step, agent, and placeholder; `tests/run-engine.test.mjs` covers an
+unresolved step-model placeholder and a placeholder agent-frontmatter model. The change
+is in the repository at package version 0.9.5, which is not yet published.
+
 **Acceptance criteria.**
-- [ ] Missing or placeholder step models produce an actionable error naming step + agent.
-- [ ] Tests cover at least one unresolved placeholder path.
-- [ ] README or `docs/workflows.md` mentions the improved error briefly if user-facing copy changes.
+- [x] Missing or placeholder step models produce an actionable error naming step + agent.
+- [x] Tests cover at least one unresolved placeholder path.
+- [x] README or `docs/workflows.md` mentions the improved error briefly if user-facing copy changes.
 
 **Route hint.** Small UX polish from the 0.9.0 lifecycle theme. ~30 — 5 min. `pr_required`.
 
@@ -388,7 +393,7 @@ errors reduce trial-and-error during `/baton:start` and `/baton:run`.
   Ongoing rule: when adding `docs/`, ask "would an installer of this package read this?"
 - **Test coverage of the engine edge cases.** Core paths (review contract, run-state
   transitions, single-active-run guard, terminal-run status) are covered; thinner areas
-  include abort propagation in `subagent-runner` ([S-112](#s-112)).
+  included abort propagation in `subagent-runner`, now covered ([S-112](#s-112)).
 - **Run lifecycle beyond the active run.** Past runs are persisted under
   `.pi/baton/runs/`, recent terminal runs are listed via `/baton:history`, and their
   structured step summaries are available via `/baton:inspect`
