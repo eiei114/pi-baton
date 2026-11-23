@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, rm, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
@@ -221,6 +221,33 @@ test("loadTerminalRunHistory skips corrupt manifests with bounded diagnostics", 
   } finally {
     await rm(cwd, { recursive: true, force: true });
   }
+});
+
+test("baton:history shows the empty state without creating Baton storage", async (t) => {
+  const cwd = await mkdtemp(join(tmpdir(), "pi-baton-history-cmd-empty-"));
+  t.after(() => rm(cwd, { recursive: true, force: true }));
+  const notifications = [];
+  let handler;
+
+  registerBaton({
+    registerCommand(name, options) {
+      if (name === "baton:history") {
+        handler = options.handler;
+      }
+    },
+  });
+
+  await handler(undefined, {
+    cwd,
+    ui: {
+      notify(message, level) {
+        notifications.push({ message, level });
+      },
+    },
+  });
+
+  assert.deepEqual(notifications, [{ message: NO_TERMINAL_HISTORY_MESSAGE, level: "info" }]);
+  await assert.rejects(stat(join(cwd, ".pi", "baton")), { code: "ENOENT" });
 });
 
 test("baton:history command notifies formatted terminal run history", async () => {
