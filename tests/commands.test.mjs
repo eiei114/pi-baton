@@ -1,12 +1,12 @@
 import assert from "node:assert/strict";
-import { access, mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { access, mkdir, mkdtemp, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
 
 const { default: registerBaton } = await import("../extensions/index.ts");
 const { createIdleRun, loadActiveRun, updateRunState } = await import("../lib/run-store.ts");
-const { getPackageWorkflowsDir } = await import("../lib/paths.ts");
+const { getPackageWorkflowsDir, getRunsDir, getWorkflowsDir } = await import("../lib/paths.ts");
 const { NO_ACTIVE_RUN_MESSAGE } = await import("../lib/status.ts");
 
 function captureCommandHandlers() {
@@ -21,7 +21,6 @@ function captureCommandHandlers() {
 
 function createMockUi(options = {}) {
   let inputIndex = 0;
-  let selectIndex = 0;
   const notifications = [];
   const identity = (value) => value;
 
@@ -35,8 +34,7 @@ function createMockUi(options = {}) {
       return options.inputs[inputIndex++];
     },
     async select(_label, choices) {
-      if (options.selects?.[selectIndex] === undefined) return choices[0];
-      return options.selects[selectIndex++];
+      return choices[0];
     },
     async editor(_title, content) {
       return options.editorContent ?? content;
@@ -136,7 +134,6 @@ test("baton:new requires interactive UI", async () => {
 test("baton:start creates idle run from builtin default-review-loop", async () => {
   const cwd = await mkdtemp(join(tmpdir(), "pi-baton-cmd-start-"));
   const ui = createMockUi({
-    selects: ["Default Review Loop"],
     inputs: ["Ship command tests"],
   });
 
@@ -148,7 +145,104 @@ test("baton:start creates idle run from builtin default-review-loop", async () =
 
     const active = await loadActiveRun(cwd);
     assert.equal(active?.state, "idle");
+    assert.equal(active?.workflowId, "default-review-loop");
     assert.equal(active?.taskBrief, "Ship command tests");
+  } finally {
+    await rm(cwd, { recursive: true, force: true });
+  }
+});
+
+test("baton:start selects the second of two local workflows with the same name", async () => {
+  const cwd = await mkdtemp(join(tmpdir(), "pi-baton-cmd-duplicate-name-"));
+  const ui = createMockUi({ inputs: ["Use the second workflow"] });
+  let labels;
+  ui.select = async (_label, choices) => {
+    labels = choices;
+    return choices[1];
+  };
+
+  try {
+    const workflowsDir = getWorkflowsDir(cwd);
+    await mkdir(workflowsDir, { recursive: true });
+    const yaml = `name: Shared Loop
+iteration_cap: 2
+steps:
+  implement:
+    agent: worker
+    prompt: do work
+    next: implement
+`;
+    const ids = ["local-alpha", "local-beta"];
+    for (const id of ids) {
+      await writeFile(join(workflowsDir, `${id}.yaml`), yaml, "utf8");
+    }
+
+    await handlers.get("baton:start")(undefined, createCtx(cwd, ui));
+
+    assert.ok(labels, JSON.stringify(ui.notifications));
+    assert.notEqual(labels[0], labels[1]);
+    const rowIds = labels.slice(0, 2).map((label) => {
+      assert.match(label, /Shared Loop/);
+      return ids.find((id) => label.includes(id));
+    });
+    assert.deepEqual([...rowIds].sort(), ids);
+    assert.match(labels[2], /default-review-loop/);
+
+    const active = await loadActiveRun(cwd);
+    assert.equal(active?.state, "idle");
+    assert.equal(active?.workflowId, rowIds[1]);
+    assert.equal(active?.workflowPath, join(workflowsDir, `${rowIds[1]}.yaml`));
+    assert.equal(active?.workflowSource, "user");
+  } finally {
+    await rm(cwd, { recursive: true, force: true });
+  }
+});
+
+test("baton:start keeps local precedence when selecting a builtin row with the same ID", async () => {
+  const cwd = await mkdtemp(join(tmpdir(), "pi-baton-cmd-shadowed-workflow-"));
+  const ui = createMockUi({ inputs: ["Use the local override"] });
+  let matchingLabels;
+  ui.select = async (_label, choices) => {
+    matchingLabels = choices.filter((label) => label.includes("default-review-loop"));
+    return matchingLabels[1];
+  };
+
+  try {
+    const workflowsDir = getWorkflowsDir(cwd);
+    await mkdir(workflowsDir, { recursive: true });
+    const localPath = join(workflowsDir, "default-review-loop.yaml");
+    await writeFile(localPath, await readFile(join(getPackageWorkflowsDir(), "default-review-loop.yaml")));
+
+    await handlers.get("baton:start")(undefined, createCtx(cwd, ui));
+
+    assert.equal(matchingLabels.length, 2);
+    assert.notEqual(matchingLabels[0], matchingLabels[1]);
+    const active = await loadActiveRun(cwd);
+    assert.equal(active?.state, "idle");
+    assert.equal(active?.workflowId, "default-review-loop");
+    assert.equal(active?.workflowPath, localPath);
+    assert.equal(active?.workflowSource, "user");
+  } finally {
+    await rm(cwd, { recursive: true, force: true });
+  }
+});
+
+test("baton:start cancels workflow selection without prompting for a brief or creating a run", async () => {
+  const cwd = await mkdtemp(join(tmpdir(), "pi-baton-cmd-cancel-start-"));
+  const ui = createMockUi();
+  ui.select = async () => undefined;
+  let prompted = false;
+  ui.input = async () => {
+    prompted = true;
+    return "This should not create a run";
+  };
+
+  try {
+    await handlers.get("baton:start")(undefined, createCtx(cwd, ui));
+
+    assert.equal(prompted, false);
+    assert.deepEqual(await readdir(getRunsDir(cwd)), []);
+    assert.equal(await loadActiveRun(cwd), null);
   } finally {
     await rm(cwd, { recursive: true, force: true });
   }
@@ -157,7 +251,6 @@ test("baton:start creates idle run from builtin default-review-loop", async () =
 test("baton:start rejects empty task brief inline", async () => {
   const cwd = await mkdtemp(join(tmpdir(), "pi-baton-cmd-empty-brief-"));
   const ui = createMockUi({
-    selects: ["Default Review Loop"],
     inputs: ["   "],
   });
 
@@ -213,7 +306,6 @@ steps:
 test("baton:start blocks a second active run", async () => {
   const cwd = await mkdtemp(join(tmpdir(), "pi-baton-cmd-guard-"));
   const ui = createMockUi({
-    selects: ["Default Review Loop", "Default Review Loop"],
     inputs: ["first run", "second run"],
   });
 
