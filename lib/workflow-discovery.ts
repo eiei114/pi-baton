@@ -19,7 +19,7 @@ async function loadWorkflowItems(
   filePaths: string[],
   source: "user" | "builtin",
 ): Promise<WorkflowListItem[]> {
-  return Promise.all(
+  const items = await Promise.all(
     filePaths.map(async (filePath) => {
       const yamlText = await readFile(filePath, "utf8");
       const id = basename(filePath, ".yaml");
@@ -27,6 +27,9 @@ async function loadWorkflowItems(
       return { id, name: workflow.name, source, path: filePath };
     }),
   );
+
+  // Compare IDs directly to keep the order independent of the filesystem and locale.
+  return items.sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
 }
 
 export async function discoverWorkflowItems(cwd: string): Promise<WorkflowListItem[]> {
