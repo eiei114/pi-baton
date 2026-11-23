@@ -128,19 +128,24 @@ test("loadWorkflowById rejects workflow ids that escape the workflow directories
   }
 });
 
-test("discoverWorkflowItems lists user-defined workflows before builtin", async () => {
+test("discoverWorkflowItems sorts by ID within each source, with user workflows first", async () => {
   const cwd = await mkdtemp(join(tmpdir(), "pi-baton-discovery-"));
   const workflowsDir = join(cwd, ".pi", "baton", "workflows");
 
   try {
     await mkdir(workflowsDir, { recursive: true });
+    await writeFile(join(workflowsDir, "user-first-extra.yaml"), userWorkflow.replace("User First", "Alpha"), "utf8");
+    await writeFile(join(workflowsDir, "z-last.yaml"), userWorkflow.replace("User First", "Beta"), "utf8");
     await writeFile(join(workflowsDir, "user-first.yaml"), userWorkflow, "utf8");
 
     const items = await discoverWorkflowItems(cwd);
-    assert.ok(items.length >= 2);
-    assert.equal(items[0].name, "User First");
-    assert.equal(items[0].source, "user");
-    assert.equal(items.at(-1)?.source, "builtin");
+    assert.deepEqual(items.map(({ id, source }) => [id, source]), [
+      ["user-first", "user"],
+      ["user-first-extra", "user"],
+      ["z-last", "user"],
+      ["default-review-loop", "builtin"],
+      ["two-stage-review-gauntlet", "builtin"],
+    ]);
   } finally {
     await rm(cwd, { recursive: true, force: true });
   }
