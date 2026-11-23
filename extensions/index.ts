@@ -94,14 +94,17 @@ export default function (pi: ExtensionAPI) {
           return;
         }
 
-        const labels = workflows.map((workflow) => workflow.name);
-        const selectedName = await ctx.ui.select("Choose workflow:", labels);
-        if (!selectedName) return;
+        // Pi returns the label, so number the rows to keep even same-ID entries distinct.
+        const labels = workflows.map((workflow, index) =>
+          `${index + 1}. ${workflow.name} (${workflow.id})`,
+        );
+        const selectedLabel = await ctx.ui.select("Choose workflow:", labels);
+        if (selectedLabel === undefined) return;
 
-        const workflowItem = workflows.find((workflow) => workflow.name === selectedName);
-        if (!workflowItem) return;
+        const selectedIndex = labels.indexOf(selectedLabel);
+        if (selectedIndex < 0) return;
 
-        const workflow = await loadWorkflowById(ctx.cwd, workflowItem.id);
+        const workflow = await loadWorkflowById(ctx.cwd, workflows[selectedIndex].id);
         validateWorkflowAgents(ctx.cwd, workflow);
 
         const taskBrief = await ctx.ui.input("Task brief:", "");
