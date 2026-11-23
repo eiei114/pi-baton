@@ -12,7 +12,7 @@
 | Latest published release | **0.9.4** (git tag `v0.9.4`) |
 | Next planned | **0.9.5** — prepared in `package.json` but not yet published (Pi SDK 1.5.2 compatibility and unresolved step-model placeholder errors already on `main`). Release stays a manual, owner-gated workflow. |
 | Stability | Early / pre-1.0; surface (`/baton:*` commands + YAML schema) is stabilizing |
-| CI | `npm run ci` green (typecheck + 134 tests + actual Pi SDK smoke + `npm pack --dry-run`) |
+| CI | `npm run ci` green (typecheck + 135 tests + actual Pi SDK smoke + `npm pack --dry-run`) |
 | Security | `npm audit` reports 0 vulnerabilities |
 | npm publishing | npm Trusted Publishing (OIDC), no `NPM_TOKEN` |
 
@@ -35,7 +35,7 @@ contract, and a live progress widget.
 | `lib/` | Workflow parser, schema validation, run engine, run store and inspection, subagent runner, review contract, model routing, UI widget, status formatter |
 | `agents/` | Builtin `worker` and `reviewer` subagent definitions |
 | `workflows/*.yaml` | Builtin workflows (default review loop and two-stage review gauntlet) |
-| `tests/*.test.mjs` | 134 tests (engine, store, schema, discovery, scaffold, widget, status, history, inspection, agents, commands, handoff, kebab-case, model-routing, review-contract, extension-registration, subagent-runner, Pi SDK smoke contract, smoke) |
+| `tests/*.test.mjs` | 135 tests (engine, store, schema, discovery, scaffold, widget, status, history, inspection, agents, commands, handoff, kebab-case, model-routing, review-contract, extension-registration, subagent-runner, Pi SDK smoke contract, smoke) |
 
 ### Architecture in one paragraph
 

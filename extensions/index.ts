@@ -216,7 +216,7 @@ export default function (pi: ExtensionAPI) {
   pi.registerCommand("baton:history", {
     description: "List recent completed or failed Baton runs from persisted history",
     handler: async (_args, ctx) => {
-      const history = await loadTerminalRunHistory(ctx.cwd);
+      const history = await loadTerminalRunHistory(ctx.cwd, { ensureDirectories: false });
       ctx.ui.notify(formatHistorySummary(history), "info");
     },
   });
