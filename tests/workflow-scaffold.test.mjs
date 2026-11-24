@@ -5,7 +5,8 @@ import { join } from "node:path";
 import test from "node:test";
 
 const scaffold = await import("../lib/workflow-scaffold.ts");
-const { ensureBatonScaffolding } = await import("../lib/paths.ts");
+const { ensureBatonScaffolding, getPackageWorkflowsDir } = await import("../lib/paths.ts");
+const { parseWorkflowDocument } = await import("../lib/workflow-schema.ts");
 
 test("derived scaffold inserts model placeholders for worker and reviewer", () => {
   const builtinYaml = `name: Default Review Loop
@@ -57,8 +58,21 @@ test("createWorkflowScaffold writes file and rejects collisions", async () => {
     assert.equal(first.filename, "custom-loop.yaml");
 
     const saved = await readFile(first.filePath, "utf8");
-    assert.match(saved, /^name: Custom Loop/m);
-    assert.match(saved, /model: <your-fast-model>/);
+    const workflow = parseWorkflowDocument(saved, {
+      id: "custom-loop", source: "user", path: first.filePath,
+    });
+    const builtinPath = join(getPackageWorkflowsDir(), "default-review-loop.yaml");
+    const builtin = parseWorkflowDocument(await readFile(builtinPath, "utf8"), {
+      id: "default-review-loop", source: "builtin", path: builtinPath,
+    });
+    assert.equal(workflow.name, "Custom Loop");
+    assert.equal(workflow.iteration_cap, builtin.iteration_cap);
+    assert.equal(workflow.entryStep, builtin.entryStep);
+    assert.deepEqual(workflow.steps, {
+      implement: { ...builtin.steps.implement, model: "<your-fast-model>" },
+      review: { ...builtin.steps.review, model: "<your-strong-model>" },
+      fix: { ...builtin.steps.fix, model: "<your-fast-model>" },
+    });
 
     await assert.rejects(
       () => scaffold.createWorkflowScaffold(dir, "Custom Loop"),
@@ -68,3 +82,18 @@ test("createWorkflowScaffold writes file and rejects collisions", async () => {
     await rm(dir, { recursive: true, force: true });
   }
 });
+
+for (const name of ["Docs: review", "Review #1", "Quotes \"and\" \\ $&", "true", "Line\nbreak"]) {
+  test(`createWorkflowScaffold round-trips ${JSON.stringify(name)}`, async () => {
+    const dir = await mkdtemp(join(tmpdir(), "pi-baton-scaffold-"));
+
+    try {
+      const { filePath } = await scaffold.createWorkflowScaffold(dir, `  ${name}  `);
+      const saved = await readFile(filePath, "utf8");
+      const workflow = parseWorkflowDocument(saved, { id: "scaffold", source: "user", path: filePath });
+      assert.equal(workflow.name, name);
+    } finally {
+      await rm(dir, { recursive: true, force: true });
+    }
+  });
+}

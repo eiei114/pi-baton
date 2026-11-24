@@ -8,6 +8,7 @@ const { default: registerBaton } = await import("../extensions/index.ts");
 const { createIdleRun, loadActiveRun, updateRunState } = await import("../lib/run-store.ts");
 const { getPackageWorkflowsDir, getRunsDir, getWorkflowsDir } = await import("../lib/paths.ts");
 const { NO_ACTIVE_RUN_MESSAGE } = await import("../lib/status.ts");
+const { parseWorkflowDocument } = await import("../lib/workflow-schema.ts");
 
 function captureCommandHandlers() {
   const handlers = new Map();
@@ -72,7 +73,8 @@ test("baton:new creates derived scaffold with model placeholders", async () => {
     const filePath = join(cwd, ".pi", "baton", "workflows", "custom-review-loop.yaml");
     await access(filePath);
     const content = await readFile(filePath, "utf8");
-    assert.match(content, /^name: Custom Review Loop/m);
+    const workflow = parseWorkflowDocument(content, { id: "custom-review-loop", source: "user", path: filePath });
+    assert.equal(workflow.name, "Custom Review Loop");
     assert.match(content, /model: <your-fast-model>/);
     assert.match(content, /model: <your-strong-model>/);
 
