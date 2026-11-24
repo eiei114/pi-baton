@@ -1,5 +1,6 @@
 import { access, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
+import { stringify as stringifyYaml } from "yaml";
 import { toKebabCase } from "./kebab-case.ts";
 import { ensureParentDir, getPackageWorkflowsDir, workflowFilePath } from "./paths.ts";
 
@@ -77,7 +78,11 @@ export async function createWorkflowScaffold(
   const builtinYaml = await readFile(builtinPath, "utf8");
   let content = buildDerivedScaffoldYaml(builtinYaml);
 
-  content = content.replace(/^name:.*$/m, `name: ${displayName.trim()}`);
+  const nameScalar = stringifyYaml(displayName.trim(), {
+    defaultStringType: "QUOTE_DOUBLE",
+    doubleQuotedAsJSON: true,
+  }).trimEnd();
+  content = content.replace(/^name:.*$/m, () => `name: ${nameScalar}`);
 
   await ensureParentDir(filePath);
   await writeFile(filePath, content, "utf8");
